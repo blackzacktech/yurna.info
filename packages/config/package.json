@@ -1,0 +1,42 @@
+{
+ "name": "@yurna/config",
+ "version": "6.0.0",
+ "description": "Yurna.info shared config for all packages and projects",
+ "exports": {
+  ".": "./index.js",
+  "./bot": "./configs/bot.js",
+  "./dashboard": "./configs/dashboard.js",
+  "./debugger": "./configs/debugger.js",
+  "./global": "./configs/global.js",
+  "./permissions": "./configs/permissions.js",
+  "./reactionRole": "./configs/reactionRole.js" 
+ },
+ "type": "module",
+ "scripts": {
+  "format": "prettier . --write --cache --ignore-unknown",
+  "format:check": "prettier . --check --cache",
+  "lint": "eslint .",
+  "lint:fix": "eslint . --fix"
+ },
+ "dependencies": {
+  "discord-api-types": "0.37.85",
+  "dotenv": "16.4.5"
+ },
+ "engines": {
+  "node": ">=20.0.0"
+ },
+ "repository": {
+  "type": "git",
+  "url": "git+https://github.com/blackzacktech/yurna.info.git",
+  "directory": "packages/config"
+ },
+ "keywords": [
+  "config"
+ ],
+ "author": "blackzacktech",
+ "license": "MIT",
+ "bugs": {
+  "url": "https://github.com/blackzacktech/yurna.info/issues"
+ },
+ "homepage": "https://github.com/blackzacktech/yurna.info#readme"
+}

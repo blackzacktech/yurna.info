@@ -1,0 +1,20 @@
+name: "CodeQL Docker Runner"
+
+on: [push, pull_request]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧱 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔨 Run CodeQL Docker Container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace codeql-runner
+          
+      - name: 📂 Upload CodeQL SARIF Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: /workspace/results.sarif

@@ -1,0 +1,70 @@
+{
+  "name": "@yurna/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Monorepo for yurna.info",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "build:force": "turbo run build:force",
+    "deploy": "turbo run deploy",
+    "analyze": "turbo run analyze",
+    "lint": "turbo run lint --no-cache --force",
+    "lint:fix": "turbo run lint:fix --no-cache --force",
+    "docker:all": "docker compose -f docker-compose.yaml up -d",
+    "docker:build": "turbo run docker:build",
+    "docker:build:bot": "docker build -t yurna/bot:latest -f ./apps/bot/Dockerfile .",
+    "docker:run:bot": "docker run -it --init --rm --env-file .env yurna/bot:latest",
+    "format": "turbo run format --no-cache --force",
+    "format:check": "turbo run format:check --no-cache --force",
+    "prisma:generate": "turbo run prisma:generate ",
+    "prisma:migrate": "turbo run prisma:migrate ",
+    "prisma:format": "turbo run prisma:format ",
+    "prisma:seed": "turbo run prisma:seed --no-cache",
+    "prisma:studio": "turbo run prisma:studio",
+    "prisma:push": "turbo run prisma:push"
+  },
+  "prisma": {
+    "schema": "packages/database/prisma/schema.prisma",
+    "seed": "node packages/database/src/seed.js"
+  },
+  "dependencies": {
+    "@stylistic/eslint-plugin": "^2.1.0",
+    "dotenv-cli": "7.4.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "turbo": "1.13.3"
+  },
+  "devDependencies": {
+    "@blackzacktech/eslint-config": "2.3.0",
+    "@blackzacktech/prettier-config": "2.3.0",
+    "eslint": "8.57.0",
+    "eslint-plugin-turbo": "1.13.3",
+    "prettier": "3.2.5"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blackzacktech/yurna.info.git"
+  },
+  "author": "blackzacktech",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blackzacktech/yurna.info/issues"
+  },
+  "homepage": "https://yurna.info",
+  "keywords": [
+    "node",
+    "discord",
+    "yurna",
+    "bot",
+    "discord-bot"
+  ]
+}
