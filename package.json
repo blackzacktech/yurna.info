@@ -37,15 +37,15 @@
     "turbo": "1.13.3"
   },
   "devDependencies": {
-    "@blackzacktech/eslint-config": "2.3.0",
-    "@blackzacktech/prettier-config": "2.3.0",
+    "@blackzacktech/eslint-config": "2.3.1",
+    "@blackzacktech/prettier-config": "2.3.1",
     "eslint": "8.57.0",
     "eslint-plugin-turbo": "1.13.3",
     "prettier": "3.2.5"
   },
   "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "engines": {
     "node": ">=20.0.0"
