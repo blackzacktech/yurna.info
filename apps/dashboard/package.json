@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@headlessui/react": "2.0.4",
-    "@headlessui/tailwindcss": "0.2.0",
+    "@headlessui/tailwindcss": "0.2.1",
     "@yurna/config": "workspace:*",
     "@yurna/database": "workspace:*",
     "@yurna/util": "workspace:*",
