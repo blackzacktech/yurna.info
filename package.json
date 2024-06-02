@@ -41,7 +41,7 @@
     "@blackzacktech/prettier-config": "2.3.1",
     "eslint": "8.57.0",
     "eslint-plugin-turbo": "1.13.3",
-    "prettier": "3.2.5"
+    "prettier": "3.3.0"
   },
   "peerDependencies": {
     "react": "^18.3.1",
