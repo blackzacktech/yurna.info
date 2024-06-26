@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@yurna/config": "workspace:*",
-    "@neondatabase/serverless": "0.9.3",
+    "@neondatabase/serverless": "0.9.4",
     "@prisma/adapter-neon": "5.15.1",
     "@prisma/client": "5.15.1",
     "chalk": "5.3.0",
