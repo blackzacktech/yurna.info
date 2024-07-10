@@ -15,7 +15,7 @@
     "lint:fix": "next lint --fix"
   },
   "dependencies": {
-    "@headlessui/react": "2.1.0",
+    "@headlessui/react": "2.1.2",
     "@headlessui/tailwindcss": "0.2.1",
     "@yurna/config": "workspace:*",
     "@yurna/database": "workspace:*",
