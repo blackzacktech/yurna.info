@@ -40,7 +40,7 @@
     "@blackzacktech/eslint-config": "2.3.1",
     "@blackzacktech/prettier-config": "2.3.1",
     "eslint": "8.57.0",
-    "eslint-plugin-turbo": "1.13.4",
+    "eslint-plugin-turbo": "2.1.0",
     "prettier": "3.3.2"
   },
   "peerDependencies": {
