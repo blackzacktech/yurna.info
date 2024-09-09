@@ -338,7 +338,7 @@ importers:
         version: 1.7.2
       axios-cookiejar-support:
         specifier: ^5.0.2
-        version: 5.0.2(axios@1.7.2)(tough-cookie@4.1.4)(undici@6.13.0)
+        version: 5.0.2(axios@1.7.2)(tough-cookie@5.0.0)(undici@6.13.0)
       chalk:
         specifier: 5.3.0
         version: 5.3.0
@@ -358,8 +358,8 @@ importers:
         specifier: ^6.12.1
         version: 6.12.3
       tough-cookie:
-        specifier: ^4.1.4
-        version: 4.1.4
+        specifier: ^5.0.0
+        version: 5.0.0
 
 packages:
 
@@ -5722,6 +5722,13 @@ packages:
   tippy.js@6.3.7:
     resolution: {integrity: sha512-E1d3oP2emgJ9dRQZdf3Kkn0qJgI6ZLpyS5z6ZkY1DF3kaQaBsGZsndEpHwx+eC+tYM41HaSNvNtLx8tU57FzTQ==}
 
+  tldts-core@6.1.43:
+    resolution: {integrity: sha512-iO1G3F2NqtmJUYlTfcH2liSdaqDnjpYn6iGftbLRNx8DF6IRIjbknVt+q0ijwZ2KGZX3J8zeYGFoiI+ZtHT5MQ==}
+
+  tldts@6.1.43:
+    resolution: {integrity: sha512-5J2v/CbNH8CkwsQV+igsuu0+3eeTfRDn1CFf38a24ZD6FIrbm3DZFu4UrrpoOSejhuP4N1PNDNUvJcw+f4nXNw==}
+    hasBin: true
+
   tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
 
@@ -5748,6 +5755,10 @@ packages:
   tough-cookie@4.1.4:
     resolution: {integrity: sha512-Loo5UUvLD9ScZ6jh8beX1T6sO1w2/MpCRpEP7V280GKMVUQ0Jzar2U3UJPsrdbziLEMMhu3Ujnq//rhiFuIeag==}
     engines: {node: '>=6'}
+
+  tough-cookie@5.0.0:
+    resolution: {integrity: sha512-FRKsF7cz96xIIeMZ82ehjC3xW2E+O2+v11udrDYewUbszngYhsGa8z6YUMMzO9QJZzzyd0nGGXnML/TReX6W8Q==}
+    engines: {node: '>=16'}
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -8732,11 +8743,11 @@ snapshots:
 
   axe-core@4.7.0: {}
 
-  axios-cookiejar-support@5.0.2(axios@1.7.2)(tough-cookie@4.1.4)(undici@6.13.0):
+  axios-cookiejar-support@5.0.2(axios@1.7.2)(tough-cookie@5.0.0)(undici@6.13.0):
     dependencies:
       axios: 1.7.2
-      http-cookie-agent: 6.0.5(tough-cookie@4.1.4)(undici@6.13.0)
-      tough-cookie: 4.1.4
+      http-cookie-agent: 6.0.5(tough-cookie@5.0.0)(undici@6.13.0)
+      tough-cookie: 5.0.0
     transitivePeerDependencies:
       - supports-color
       - undici
@@ -10233,10 +10244,10 @@ snapshots:
       domutils: 3.1.0
       entities: 4.5.0
 
-  http-cookie-agent@6.0.5(tough-cookie@4.1.4)(undici@6.13.0):
+  http-cookie-agent@6.0.5(tough-cookie@5.0.0)(undici@6.13.0):
     dependencies:
       agent-base: 7.1.1
-      tough-cookie: 4.1.4
+      tough-cookie: 5.0.0
     optionalDependencies:
       undici: 6.13.0
     transitivePeerDependencies:
@@ -12656,6 +12667,12 @@ snapshots:
     dependencies:
       '@popperjs/core': 2.11.8
 
+  tldts-core@6.1.43: {}
+
+  tldts@6.1.43:
+    dependencies:
+      tldts-core: 6.1.43
+
   tmpl@1.0.5: {}
 
   to-fast-properties@2.0.0: {}
@@ -12676,6 +12693,10 @@ snapshots:
       punycode: 2.3.1
       universalify: 0.2.0
       url-parse: 1.5.10
+
+  tough-cookie@5.0.0:
+    dependencies:
+      tldts: 6.1.43
 
   tr46@0.0.3: {}
 
