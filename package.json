@@ -39,7 +39,7 @@
   "devDependencies": {
     "@blackzacktech/eslint-config": "2.3.1",
     "@blackzacktech/prettier-config": "2.3.1",
-    "eslint": "8.57.0",
+    "eslint": "8.57.1",
     "eslint-plugin-turbo": "1.13.4",
     "prettier": "3.3.2"
   },
