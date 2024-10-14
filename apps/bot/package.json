@@ -16,7 +16,7 @@
   "dependencies": {
     "@discordjs/rest": "2.3.0",
     "@iamtraction/google-translate": "2.0.1",
-    "@napi-rs/canvas": "0.1.53",
+    "@napi-rs/canvas": "0.1.58",
     "@observablehq/plot": "0.6.15",
     "@yurna/config": "workspace:*",
     "@yurna/database": "workspace:*",
