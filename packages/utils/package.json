@@ -22,7 +22,7 @@
     "axios": "^1.6.8",
     "axios-cookiejar-support": "^5.0.2",
     "chalk": "5.3.0",
-    "discord-api-types": "0.37.90",
+    "discord-api-types": "0.37.103",
     "discord.js": "14.15.3",
     "https": "^1.0.0",
     "ms": "2.1.3",
