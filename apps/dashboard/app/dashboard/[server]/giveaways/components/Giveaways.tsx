@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { User } from "@yurna/database/types";
 import { formatDate, formatDuration } from "@yurna/util/functions/util";
-import type { ColumnDef } from "@tanstack/react-table";
 import { Snowflake } from "discord-api-types/globals";
 import { GiveawayData } from "discord-giveaways";
 import Link from "next/link";

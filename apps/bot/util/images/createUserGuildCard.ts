@@ -1,5 +1,5 @@
-import { shortenText } from "@yurna/util/functions/util";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
+import { shortenText } from "@yurna/util/functions/util";
 import type { Guild, User } from "discord.js";
 
 export async function createUserGuildCard(user: User, guild: Guild): Promise<Buffer> {

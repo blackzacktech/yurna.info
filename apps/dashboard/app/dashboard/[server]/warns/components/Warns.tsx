@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { GuildWarns, User } from "@yurna/database/types";
 import { formatDuration, shortenText } from "@yurna/util/functions/util";
-import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useCallback } from "react";

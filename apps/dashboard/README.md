@@ -88,8 +88,8 @@ Ensure your setup meets these prerequisites before setting up Yurna.info:
 
 **These wonderful people and services have helped develop Yurna.info, without them this project would not exist. Thanks goes to these wonderful people!**
 
-|                                                                      | Sponsor                                                             | Description                                                                                                             |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+|                                                                     | Sponsor                                                             | Description                                                                                                             |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
 | ![TrestHost Logo](https://yurna.info/assets/sponsors/tresthost.png) | [**TrestHost**](https://dash.tresthost.me/register?ref=majonez.exe) | **TrestHost is a good and powerful hosting provider** providing servers from the **USA and Germany**. Try us out today! |
 
 ## ⁉️ Issues

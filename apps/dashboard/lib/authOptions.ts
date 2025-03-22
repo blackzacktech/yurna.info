@@ -1,5 +1,5 @@
-import prismaClient from "@yurna/database";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import prismaClient from "@yurna/database";
 import { Account, AuthOptions, DefaultSession } from "next-auth";
 import DiscordProvider, { DiscordProfile } from "next-auth/providers/discord";
 

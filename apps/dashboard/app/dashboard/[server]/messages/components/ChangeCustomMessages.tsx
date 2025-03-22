@@ -1,7 +1,7 @@
 "use client";
 
-import { globalConfig } from "@yurna/config";
 import { toHTML } from "@odiffey/discord-markdown";
+import { globalConfig } from "@yurna/config";
 import { Snowflake } from "discord-api-types/globals";
 import React, { useState } from "react";
 import { toast } from "sonner";

@@ -1,8 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { User } from "@yurna/database/types";
 import { formatNumber } from "@yurna/util/functions/util";
-import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/Buttons";
 import { Icons, iconVariants } from "@/components/ui/Icons";

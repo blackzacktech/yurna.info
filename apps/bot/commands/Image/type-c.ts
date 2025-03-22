@@ -1,5 +1,5 @@
-import { shortenText } from "@yurna/util/functions/util";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
+import { shortenText } from "@yurna/util/functions/util";
 import { ApplicationCommandType, ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from "discord.js";
 import type { SlashCommand } from "@/util/types/Command";
 

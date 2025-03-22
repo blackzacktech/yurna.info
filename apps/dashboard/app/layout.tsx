@@ -1,6 +1,6 @@
-import { dashboardConfig } from "@yurna/config";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { dashboardConfig } from "@yurna/config";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
 import { Toaster } from "sonner";

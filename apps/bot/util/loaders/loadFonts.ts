@@ -1,5 +1,5 @@
-import { readDir } from "@yurna/util/functions/files/readDir.js";
 import { GlobalFonts } from "@napi-rs/canvas";
+import { readDir } from "@yurna/util/functions/files/readDir.js";
 import type { Yurnabot } from "@/index";
 
 export default async function loadFonts(client: Yurnabot): Promise<void> {

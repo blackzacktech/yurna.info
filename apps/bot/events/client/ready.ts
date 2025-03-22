@@ -1,7 +1,7 @@
-import { reactionRoleSetup } from "@/events/reaction/reactionRoleSetup";
 import topggSDK from "@top-gg/sdk";
 import { PresenceUpdateStatus, ActivityType, RESTPutAPIApplicationCommandsJSONBody } from "discord.js";
 import { postBotCommands, postBotStats } from "discordbotlist";
+import { reactionRoleSetup } from "@/events/reaction/reactionRoleSetup";
 import type { Yurnabot } from "@/index";
 
 export async function ready(client: Yurnabot) {

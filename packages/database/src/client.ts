@@ -1,7 +1,7 @@
-import { debuggerConfig } from "@yurna/config";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
+import { debuggerConfig } from "@yurna/config";
 import { createPrismaRedisCache } from "prisma-redis-middleware";
 import ws from "ws";
 import { Logger } from "./logger";

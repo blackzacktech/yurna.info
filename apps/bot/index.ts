@@ -1,11 +1,11 @@
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { globalConfig, botConfig, debuggerConfig, dashboardConfig, globalPermissions, reactionRoleConfig  } from "@yurna/config";
+import { globalConfig, botConfig, debuggerConfig, dashboardConfig, globalPermissions, reactionRoleConfig } from "@yurna/config";
 import { createErrorEmbed } from "@yurna/util/embeds";
 import { Logger, chalk } from "@yurna/util/functions/util";
 // import type { GiveawaysManager } from "discord-giveaways";
 import { GiveawaysManager } from "discord-giveaways";
-import { Client, type CommandInteraction, GatewayIntentBits, Collection, Partials, type VoiceState, type MessageReaction, type User } from "discord.js";
+import { Client, type CommandInteraction, GatewayIntentBits, Collection, Partials } from "discord.js";
 import giveaway from "@/util/giveaway/core";
 import loadCommands from "@/util/loaders/loadCommands";
 import loadEmojis from "@/util/loaders/loadEmojis";
@@ -57,29 +57,7 @@ class Yurnabot extends Client {
 }
 
 const client = new Yurnabot({
- intents: [
-  GatewayIntentBits.Guilds,
-  GatewayIntentBits.GuildMembers,
-  GatewayIntentBits.GuildModeration,
-  GatewayIntentBits.GuildEmojisAndStickers,
-  GatewayIntentBits.GuildIntegrations,
-  GatewayIntentBits.GuildWebhooks,
-  GatewayIntentBits.GuildInvites,
-  GatewayIntentBits.GuildVoiceStates,
-  GatewayIntentBits.GuildPresences,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.GuildMessageReactions,
-  GatewayIntentBits.GuildMessageTyping,
-  GatewayIntentBits.DirectMessages,
-  GatewayIntentBits.DirectMessageReactions,
-  GatewayIntentBits.DirectMessageTyping,
-  GatewayIntentBits.MessageContent,
-  GatewayIntentBits.GuildScheduledEvents,
-  GatewayIntentBits.AutoModerationConfiguration,
-  GatewayIntentBits.AutoModerationExecution,
-  GatewayIntentBits.GuildMessagePolls,
-  GatewayIntentBits.DirectMessagePolls
- ],
+ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildModeration, GatewayIntentBits.GuildEmojisAndStickers, GatewayIntentBits.GuildIntegrations, GatewayIntentBits.GuildWebhooks, GatewayIntentBits.GuildInvites, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.GuildMessageTyping, GatewayIntentBits.DirectMessages, GatewayIntentBits.DirectMessageReactions, GatewayIntentBits.DirectMessageTyping, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildScheduledEvents, GatewayIntentBits.AutoModerationConfiguration, GatewayIntentBits.AutoModerationExecution, GatewayIntentBits.GuildMessagePolls, GatewayIntentBits.DirectMessagePolls],
  partials: [Partials.Message, Partials.Reaction, Partials.User],
 });
 

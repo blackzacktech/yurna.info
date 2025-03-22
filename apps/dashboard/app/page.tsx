@@ -405,9 +405,7 @@ export default async function Page() {
       </Link>
      </div>
 
-     <div className="relative mt-16 flex w-full justify-center overflow-hidden lg:px-16">
-      
-     </div>
+     <div className="relative mt-16 flex w-full justify-center overflow-hidden lg:px-16"></div>
      <BorderBeam colorFrom={globalConfig.defaultColor} colorTo={globalConfig.defaultColor} size={450} borderWidth={1.7} />
      <FlickeringGrid width={1400} height={800} squareSize={3} color={"#737373"} className="pointer-events-none absolute inset-0 -z-10 size-full bg-background-secondary opacity-70" />
      <div className="to-[hsla(202, 36%, 96%, 1)] absolute inset-0 -z-10 size-full bg-linear-to-b from-accent-primary/15" />

@@ -1,7 +1,7 @@
+import * as Plot from "@observablehq/plot";
 import prismaClient from "@yurna/database";
 import type { GuildJoin, GuildLeave, GuildMessage } from "@yurna/database/types";
 import { fillMissingDates } from "@yurna/util/functions/util";
-import * as Plot from "@observablehq/plot";
 import { ApplicationCommandType, ApplicationCommandOptionType, PermissionFlagsBits, AttachmentBuilder, EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from "discord.js";
 import jsdom from "jsdom";
 import sharp from "sharp";

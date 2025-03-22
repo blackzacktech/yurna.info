@@ -1,5 +1,5 @@
-import { getLines } from "@yurna/util/images";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
+import { getLines } from "@yurna/util/images";
 import { ApplicationCommandType, ApplicationCommandOptionType, AttachmentBuilder, EmbedBuilder, InteractionContextType, ApplicationIntegrationType } from "discord.js";
 import type { SlashCommand } from "@/util/types/Command";
 

@@ -1,5 +1,5 @@
-import { formatNumber, shortenText } from "@yurna/util/functions/util";
 import { loadImage, createCanvas } from "@napi-rs/canvas";
+import { formatNumber, shortenText } from "@yurna/util/functions/util";
 import type { User } from "discord.js";
 
 export function calculateProgress(currentXp: number, requiredXp: number): number {
