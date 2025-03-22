@@ -1,0 +1,36 @@
+import { GuildLogType } from "@yurna/database/types";
+import { getGuildLogSettings } from "@yurna/util/database";
+import { GuildBan, EmbedBuilder, inlineCode } from "discord.js";
+import type { Yurnabot } from "@/index";
+
+export async function guildBanRemove(client: Yurnabot, ban: GuildBan) {
+ try {
+  if (!ban.guild) return;
+  const settings = await getGuildLogSettings(ban.guild.id, GuildLogType.GuildBanRemove);
+  if (!settings?.enabled || !settings.channelId) return;
+  const discordGuild = ban.guild;
+  const channel = await discordGuild.channels.fetch(settings.channelId);
+  if (!channel || !channel.isTextBased()) return;
+
+  const fields = [
+   {
+    name: "User",
+    value: `${ban.user.globalName || ban.user.username || "Unknown"} (${inlineCode(ban.user.id)})`,
+   },
+  ];
+
+  const embed = new EmbedBuilder()
+   .setTitle("🔓 User Unbanned")
+   .setFields(fields)
+   .setColor("#10B981")
+   .setTimestamp()
+   .setFooter({
+    text: `Unbanned by ${ban.user.globalName || ban.user.username || "Unknown"}`,
+    iconURL: ban.user.displayAvatarURL({ size: 256 }) || undefined,
+   });
+
+  channel.send({ embeds: [embed] });
+ } catch (err: unknown) {
+  client.debugger("error", err);
+ }
+}

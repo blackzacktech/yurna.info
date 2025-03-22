@@ -1,0 +1,76 @@
+{
+  "name": "@yurna/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Monorepo for Yurna",
+  "scripts": {
+    "dev": "PORT=3008 turbo run dev",
+    "build": "PORT=3008 turbo run build",
+    "build:force": " PORT=3008 turbo run build:force",
+    "deploy": " PORT=3008 turbo run deploy",
+    "analyze": " turbo run analyze",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "docker:all": "docker compose -f docker-compose.yaml up -d",
+    "docker:build": "turbo run docker:build",
+    "docker:build:bot": "docker build -t yurna/bot:latest -f ./apps/bot/Dockerfile .",
+    "docker:run:bot": "docker run -it --init --rm --env-file .env yurna/bot:latest",
+    "format": "turbo run format",
+    "format:check": "turbo run format:check",
+    "prisma:generate": "turbo run prisma:generate ",
+    "prisma:migrate": "turbo run prisma:migrate ",
+    "prisma:format": "turbo run prisma:format ",
+    "prisma:seed": "turbo run prisma:seed --no-cache",
+    "prisma:studio": "turbo run prisma:studio",
+    "prisma:push": "turbo run prisma:push",
+    "pm:start": "pm2 start ecosystem.config.cjs",
+    "pm:stop": "pm2 stop ecosystem.config.cjs",
+    "pm:restart": "pm2 restart ecosystem.config.cjs",
+    "pm:logs": "pm2 logs"
+  },
+  "prisma": {
+    "schema": "packages/database/prisma/schema.prisma",
+    "seed": "node packages/database/src/seed.ts"
+  },
+  "dependencies": {
+    "dotenv-cli": "8.0.0",
+    "tsx": "4.19.3",
+    "turbo": "2.4.4"
+  },
+  "devDependencies": {
+    "@igorkowalczyk/eslint-config": "3.0.7",
+    "@igorkowalczyk/prettier-config": "3.0.7",
+    "@types/node": "22.13.10",
+    "eslint": "9.22.0",
+    "eslint-plugin-turbo": "2.4.4",
+    "pre-commit": "1.2.2",
+    "prettier": "3.5.3",
+    "typescript": "5.8.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "pre-commit": [
+    "lint",
+    "format"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blackzacktech/yurna.info"
+  },
+  "author": "Blackzack",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blackzacktech/yurna.info/issues"
+  },
+  "homepage": "https://yurna.info",
+  "keywords": [
+    "node",
+    "discord",
+    "yurna",
+    "bot",
+    "discord-bot"
+  ],
+  "packageManager": "pnpm@10.6.3"
+}

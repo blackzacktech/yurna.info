@@ -1,0 +1,3 @@
+{
+ "extends": "@yurna/typescript-config/base"
+}

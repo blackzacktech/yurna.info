@@ -1,0 +1,63 @@
+{
+  "name": "@yurna/database",
+  "version": "6.0.0",
+  "description": "Yurna.info main database schema/client/migrations package",
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts",
+    "./types": "./src/types.ts",
+    "./redis": "./src/redis/cache.ts"
+  },
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:format": "prisma format",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "tsx ./src/seed.ts",
+    "format": "prettier . --write --cache --ignore-unknown --plugin=prettier-plugin-prisma",
+    "format:check": "prettier . --check --cache",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prebuild": "pnpm run prisma:generate",
+    "studio": "prisma studio"
+  },
+  "dependencies": {
+    "@yurna/config": "workspace:*",
+    "@yurna/typescript-config": "workspace:*",
+    "@neondatabase/serverless": "0.10.4",
+    "@prisma/adapter-neon": "6.5.0",
+    "@prisma/client": "6.5.0",
+    "chalk": "5.4.1",
+    "ioredis": "5.6.0",
+    "prisma": "6.5.0",
+    "prisma-redis-middleware": "4.8.0",
+    "ws": "8.18.1"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.0",
+    "prettier-plugin-prisma": "5.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igorkowalczyk/yurna.exe.git",
+    "directory": "packages/database"
+  },
+  "keywords": [
+    "prisma",
+    "database",
+    "orm",
+    "sql",
+    "postgresql",
+    "mysql"
+  ],
+  "author": "Blackzack",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/igorkowalczyk/yurna.exe/issues"
+  },
+  "homepage": "https://github.com/igorkowalczyk/yurna.exe#readme",
+  "packageManager": "pnpm@10.6.3"
+}

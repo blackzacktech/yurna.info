@@ -1,0 +1,15 @@
+{
+ "extends": "@yurna/typescript-config/base",
+ "compilerOptions": {
+  "lib": ["ES2022", "dom", "dom.iterable"],
+  "jsx": "preserve",
+  "baseUrl": ".",
+  "paths": {
+   "@/*": ["./*"]
+  },
+  "plugins": [{ "name": "next" }],
+  "module": "esnext"
+ },
+ "include": [".", ".next/types/**/*.ts"],
+ "exclude": ["node_modules"]
+}
