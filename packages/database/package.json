@@ -4,7 +4,7 @@
   "description": "Yurna.info main database schema/client/migrations package",
   "type": "module",
   "exports": {
-    ".": "./src/client.ts",
+    ".": "./src/index.ts",
     "./types": "./src/types.ts",
     "./redis": "./src/redis/cache.ts"
   },
