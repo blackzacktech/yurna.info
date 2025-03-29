@@ -14,9 +14,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/Switch';
 import { EmojiPicker } from '@/components/ui/emoji-picker';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';

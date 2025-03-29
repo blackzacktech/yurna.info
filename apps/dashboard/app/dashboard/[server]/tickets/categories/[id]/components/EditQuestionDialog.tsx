@@ -1,6 +1,8 @@
+"use client"
+
 import { FC, useState } from 'react';
 import { TicketQuestion } from '@prisma/client';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog';
 import {
   Form,
   FormControl,
@@ -10,9 +12,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Switch } from '@/components/ui/Switch';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
