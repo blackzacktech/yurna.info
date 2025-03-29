@@ -12,8 +12,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { PlusCircle, Edit, Trash, ClipboardList, Check, X, MessageSquare } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/Dialog';
+import { Tooltip, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip';
 import Link from 'next/link';
 import CreateCategoryForm from './CreateCategoryForm';
 
@@ -128,7 +128,7 @@ const CategoryCard: FC<CategoryCardProps> = ({ category, serverId }) => {
       </CardContent>
       <CardFooter className="flex justify-between pt-3">
         <TooltipProvider>
-          <Tooltip>
+          <Tooltip content="Fragen verwalten">
             <TooltipTrigger asChild>
               <Button variant="outline" size="icon" asChild>
                 <Link href={`/dashboard/${serverId}/tickets/categories/${category.id}`}>
@@ -136,15 +136,12 @@ const CategoryCard: FC<CategoryCardProps> = ({ category, serverId }) => {
                 </Link>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Fragen verwalten</p>
-            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        
+
         <div className="flex space-x-2">
           <TooltipProvider>
-            <Tooltip>
+            <Tooltip content="Bearbeiten">
               <TooltipTrigger asChild>
                 <Button variant="outline" size="icon" asChild>
                   <Link href={`/dashboard/${serverId}/tickets/categories/${category.id}/edit`}>
@@ -152,22 +149,21 @@ const CategoryCard: FC<CategoryCardProps> = ({ category, serverId }) => {
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Bearbeiten</p>
-              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <TooltipProvider>
-            <Tooltip>
+            <Tooltip content="Löschen">
               <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="text-red-500">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hover:bg-red-100 hover:text-red-600"
+                  onClick={() => setDeletingCategoryId(category.id)}
+                >
                   <Trash className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>Löschen</p>
-              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
