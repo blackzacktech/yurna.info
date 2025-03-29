@@ -2,11 +2,11 @@
 
 import { useReactTable, getCoreRowModel, getSortedRowModel, getPaginationRowModel, getFilteredRowModel, ColumnDef, Column, flexRender } from "@tanstack/react-table";
 import React, { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Icons, iconVariants } from "@/components/ui/Icons";
-import { InputWithIcon } from "@/components/ui/Input";
-import { Menu, MenuItem, MenuItems, MenuButton } from "@/components/ui/Menu";
-import { ViewSelect } from "@/components/ui/ViewSelect";
+import { Button } from "@/components/ui/button";
+import { Icons, iconVariants } from "@/components/ui/icons";
+import { InputWithIcon } from "@/components/ui/input";
+import { Menu, MenuItem, MenuItems, MenuButton } from "@/components/ui/menu";
+import { ViewSelect } from "@/components/ui/view-select";
 import { cn } from "@/lib/utils";
 
 interface TableProps<TData, TValue> {
