@@ -1,5 +1,5 @@
 import { getGuild } from "./getGuild";
-import { prisma } from "@yurna/database";
+import prismaClient from "@yurna/database";
 import { APIGuild } from "discord-api-types/v10";
 
 /**
@@ -14,8 +14,8 @@ export async function getGuildInfo(serverId: string) {
     if (!guild) return null;
 
     // Get guild data from database
-    const guildData = await prisma.guild.findUnique({
-      where: { id: serverId },
+    const guildData = await prismaClient.guild.findUnique({
+      where: { guildId: serverId },
       include: {
         tickets: true,
         ticketCategories: {
