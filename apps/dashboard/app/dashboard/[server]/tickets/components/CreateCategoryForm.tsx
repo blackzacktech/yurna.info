@@ -109,7 +109,7 @@ const CreateCategoryForm: FC<CreateCategoryFormProps> = ({ serverId, onSuccess }
       console.error('Fehler beim Erstellen der Kategorie:', error);
       toast({
         title: 'Fehler',
-        description: error instanceof Error ? error.message : 'Ein unbekannter Fehler ist aufgetreten.',
+        description: error instanceof Error ? error.message : 'Unbekannter Fehler beim Erstellen der Kategorie',
         variant: 'destructive',
       });
     } finally {
@@ -119,7 +119,7 @@ const CreateCategoryForm: FC<CreateCategoryFormProps> = ({ serverId, onSuccess }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

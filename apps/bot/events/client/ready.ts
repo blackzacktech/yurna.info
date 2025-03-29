@@ -14,10 +14,14 @@ export async function ready(client: Yurnabot) {
  const registerTime = performance.now();
  client.debugger("info", "Registering slash commands...");
 
+ // Korrekte Umwandlung der Map in ein Array von Command-Objekten
+ const commandsArray = Array.from(client.slashCommands.values());
+ client.debugger("info", `Preparing to register ${commandsArray.length} slash commands...`);
+
  client.application.commands
-  .set(client.slashCommands.map((command) => command))
+  .set(commandsArray)
   .catch((error: Error) => {
-   client.debugger("error", error);
+   client.debugger("error", `Error registering commands: ${error}`);
   })
   .then((commands) => {
    if (commands) {
@@ -51,7 +55,9 @@ export async function ready(client: Yurnabot) {
     users: client.users.cache.size,
    });
 
-   await postBotCommands(process.env.DISCORD_BOT_LIST_API_KEY, client.user.id, client.slashCommands.map((command) => command) as RESTPutAPIApplicationCommandsJSONBody);
+   // Hier ebenfalls die Map korrekt in ein Array umwandeln
+   const commandsForAPI = Array.from(client.slashCommands.values()) as RESTPutAPIApplicationCommandsJSONBody;
+   await postBotCommands(process.env.DISCORD_BOT_LIST_API_KEY, client.user.id, commandsForAPI);
   }
  }, 300000); // 5 minutes
 
