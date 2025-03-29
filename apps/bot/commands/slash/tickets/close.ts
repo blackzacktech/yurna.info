@@ -1,11 +1,19 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChatInputCommandInteraction, Client, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
+import { ChatInputCommandInteraction, Client, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import prismaClient from '@yurna/database';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('ticket-close')
-    .setDescription('Schließt ein Support-Ticket'),
+    .setDescription('Schließt das aktuelle Ticket'),
+
+  name: "ticket-close",
+  description: "🎫 Schließt das aktuelle Ticket",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 5000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-close",
 
   async execute(interaction: ChatInputCommandInteraction, client: Client) {
     // Ticket-Manager-Instanz aus dem Client holen

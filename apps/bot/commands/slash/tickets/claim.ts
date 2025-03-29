@@ -1,10 +1,18 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChatInputCommandInteraction, Client } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
+import { ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
 export default {
   data: new SlashCommandBuilder()
     .setName('ticket-claim')
     .setDescription('Beansprucht ein Ticket für dich'),
+  
+  name: "ticket-claim",
+  description: "🎫 Beansprucht ein Ticket für dich",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-claim",
 
   async execute(interaction: ChatInputCommandInteraction, client: Client) {
     // Ticket-Manager-Instanz aus dem Client holen

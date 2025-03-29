@@ -1,11 +1,11 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
-import { AutocompleteInteraction, ChatInputCommandInteraction, Client } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
+import { AutocompleteInteraction, ChatInputCommandInteraction, Client, ComponentType, StringSelectMenuBuilder, ActionRowBuilder, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import prismaClient from '@yurna/database';
 
 export default {
   data: new SlashCommandBuilder()
-    .setName('ticket')
-    .setDescription('Erstellt ein neues Support-Ticket')
+    .setName('ticket-new')
+    .setDescription('Erstellt ein neues Ticket')
     .addStringOption(option =>
       option.setName('kategorie')
         .setDescription('Wähle eine Ticket-Kategorie')
@@ -17,6 +17,14 @@ export default {
         .setDescription('Gib ein kurzes Thema für dein Ticket an')
         .setRequired(false)
     ),
+
+  name: "ticket-new",
+  description: "🎫 Erstellt ein neues Ticket",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 10000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-new",
 
   async autocomplete(interaction: AutocompleteInteraction) {
     const focusedValue = interaction.options.getFocused();

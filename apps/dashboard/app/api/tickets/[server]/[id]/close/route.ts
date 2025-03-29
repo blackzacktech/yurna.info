@@ -1,6 +1,6 @@
 import prismaClient from '@yurna/database';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '../../../../../../lib/auth';
 import { isGuildAdmin } from '@yurna/util/functions/guild';
 import { NextRequest, NextResponse } from 'next/server';
 
