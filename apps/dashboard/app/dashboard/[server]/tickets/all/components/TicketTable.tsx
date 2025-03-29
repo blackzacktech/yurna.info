@@ -2,17 +2,17 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Table } from '@/components/ui/Table';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
+import { Table } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Eye, Clock, X, CheckCircle2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '@/components/ui/DropdownMenu';
-import { SimpleTableHeader } from '@/components/ui/SimpleTableHeader';
+} from '@/components/ui/dropdown-menu';
+import { SimpleTableHeader } from '@/components/ui/simple-table-header';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
