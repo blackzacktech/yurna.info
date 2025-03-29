@@ -30,7 +30,11 @@ model User {
  guildXp       GuildXp[]
  reputation    Reputation[]
  guildWarns    GuildWarns[]
- tickets       Ticket[]
+ ticketsCreated Ticket[]        @relation("TicketsCreatedByUser")
+ ticketsClaimed Ticket[]        @relation("TicketsClaimedByUser")
+ ticketsClosed  Ticket[]        @relation("TicketsClosedByUser")
+ ticketQuestionAnswers TicketQuestionAnswer[]
+ ticketFeedbacks TicketFeedback[]
 
  @@map(name: "users")
 }
@@ -144,6 +148,8 @@ model Guild {
  partnerGuilds           GuildPartner[]  @relation("PartnerGuilds")
  ticketCategories        TicketCategory[]
  tickets                 Ticket[]
+ ticketFeedbacks         TicketFeedback[]
+ ticketTags              TicketTag[]
 
  @@map(name: "guilds")
 }
