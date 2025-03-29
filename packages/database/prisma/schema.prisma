@@ -139,6 +139,7 @@ model Guild {
  guildWarns              GuildWarns[]
  guildWelcomeMessage     GuildWelcomeMessage?
  guildLeaveMessage       GuildLeaveMessage?
+ guildPartners           GuildPartner[]
 
  @@map(name: "guilds")
 }
@@ -374,6 +375,20 @@ model GuildWarns {
  user        User     @relation(fields: [userId], references: [discordId], onDelete: Cascade)
 
  @@map(name: "guild_warns")
+}
+
+// Guild partner servers
+model GuildPartner {
+ id          String   @id @default(cuid())
+ guildId     String   @map(name: "guild_id")
+ name        String
+ description String?  @db.Text
+ hasBanner   Boolean  @default(false) @map(name: "has_banner")
+ createdAt   DateTime @default(now()) @map(name: "created_at")
+ updatedAt   DateTime @updatedAt @map(name: "updated_at")
+ guild       Guild    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+ @@map(name: "guild_partners")
 }
 
 // Guild welcome message
