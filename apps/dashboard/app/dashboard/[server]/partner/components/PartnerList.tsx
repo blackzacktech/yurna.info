@@ -4,11 +4,10 @@ import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/Buttons";
 import { Block } from "@/components/ui/Block";
 import { Icons, iconVariants } from "@/components/ui/Icons";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
+import { Input, Textarea } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { GuildPartner } from "@prisma/client";
+import type { GuildPartner } from "@prisma/client";
 import Image from "next/image";
 
 export const PartnerList = ({
@@ -33,7 +32,7 @@ export const PartnerList = ({
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
 
-  const handleAddPartner = async (e: React.FormEvent) => {
+  const handleAddPartner = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newPartner.name) return;
 
@@ -64,7 +63,7 @@ export const PartnerList = ({
     }
   };
 
-  const handleEditPartner = async (e: React.FormEvent, partnerId: string) => {
+  const handleEditPartner = async (e: React.FormEvent<HTMLFormElement>, partnerId: string) => {
     e.preventDefault();
     if (!editPartner.name) return;
 
