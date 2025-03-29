@@ -123,6 +123,12 @@ export const PartnerList = ({
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!newPartner.name) {
+      alert("Partner name is required");
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", newPartner.name);
     if (newPartner.description) {
@@ -169,9 +175,11 @@ export const PartnerList = ({
       } else {
         const errorData = await response.json();
         console.error("Error adding partner:", errorData);
+        alert(`Error adding partner: ${errorData.message || errorData.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error adding partner:", error);
+      alert("Error adding partner. Please try again.");
     }
 
     setIsSubmitting(false);
@@ -181,7 +189,17 @@ export const PartnerList = ({
     e.preventDefault();
     setIsSubmitting(true);
 
-    if (!editingPartnerId) return;
+    if (!editingPartnerId) {
+      alert("No partner selected for editing");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!editPartner.name) {
+      alert("Partner name is required");
+      setIsSubmitting(false);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("name", editPartner.name);
@@ -216,7 +234,7 @@ export const PartnerList = ({
       const response = await fetch(
         `/api/partners/${serverId}/${editingPartnerId}`,
         {
-          method: "PATCH",
+          method: "PUT",
           body: formData,
         }
       );
@@ -232,9 +250,11 @@ export const PartnerList = ({
       } else {
         const errorData = await response.json();
         console.error("Error editing partner:", errorData);
+        alert(`Error editing partner: ${errorData.message || errorData.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error editing partner:", error);
+      alert("Error editing partner. Please try again.");
     }
 
     setIsSubmitting(false);
@@ -560,20 +580,20 @@ export const PartnerList = ({
                     <Image
                       src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
                       alt={`${partner.name} banner`}
-                      width={120}
-                      height={60}
-                      className="h-auto w-[120px] object-cover"
+                      width={640}
+                      height={160}
+                      className="h-40 w-full object-cover"
                     />
                   </div>
                 )}
                 {partner.hasPosters && (
                   <div className="shrink-0 overflow-hidden rounded-md">
                     <Image
-                      src={`/server/${serverId}/${partner.id}/posters.png`}
+                      src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`}
                       alt={`${partner.name} poster`}
-                      width={120}
-                      height={60}
-                      className="h-auto w-[120px] object-cover"
+                      width={640}
+                      height={160}
+                      className="h-40 w-full object-cover"
                     />
                   </div>
                 )}

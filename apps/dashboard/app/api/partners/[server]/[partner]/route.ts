@@ -1,18 +1,29 @@
-import prismaClient from "@yurna/database";
-import { getGuildFromMemberGuilds, getGuild } from "@yurna/util/functions/guild";
-import { getSession } from "lib/session";
 import { NextRequest, NextResponse } from "next/server";
+import prismaClient from "@yurna/database";
 import fs from "fs";
 import path from "path";
 import { getServerSession } from "next-auth";
 import authOptions from "lib/authOptions";
+import { getGuild, getGuildFromMemberGuilds } from "@yurna/util/functions/guild";
+import { getSession } from "lib/session";
+
+// Helper function to check if user has required permission
+function hasPermission(requiredPermission: string, permissions: string) {
+  // Discord permission "MANAGE_GUILD" is represented by the bit 0x20 (32 in decimal)
+  if (requiredPermission === "MANAGE_GUILD") {
+    const permissionBit = BigInt(0x20);
+    const permissionsValue = BigInt(permissions);
+    return (permissionsValue & permissionBit) === permissionBit;
+  }
+  return false;
+}
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { server: string; partner: string } }
 ) {
-  const session = await getSession();
-  if (!session || !session.access_token) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -22,43 +33,53 @@ export async function PUT(
     return NextResponse.json({ error: "Server not found" }, { status: 404 });
   }
 
+  const accessToken = session.accessToken as string;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Missing access token" }, { status: 401 });
+  }
+
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.access_token
+    accessToken
   );
+  
+  // Check if user has permission to manage partners
   if (
     !serverMember ||
-    !serverMember.permissions_names ||
-    !serverMember.permissions_names.includes("ManageGuild") ||
-    !serverMember.permissions_names.includes("Administrator")
+    !serverMember.permissions ||
+    !hasPermission("MANAGE_GUILD", serverMember.permissions)
   ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "You don't have permission to manage partners" },
+      { status: 403 }
+    );
   }
 
   try {
-    // Check if partner exists and belongs to this server
-    const existingPartner = await prismaClient.guildPartner.findFirst({
+    // Find the partner
+    const existingPartner = await prismaClient.guildPartner.findUnique({
       where: {
         id: partner,
-        guildId: serverDownload.id,
       },
     });
 
     if (!existingPartner) {
+      return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+    }
+
+    // Ensure user is editing a partner from their own server
+    if (existingPartner.guildId !== serverDownload.id) {
       return NextResponse.json(
-        { error: "Partner not found" },
-        { status: 404 }
+        { error: "You can only edit partners from your own server" },
+        { status: 403 }
       );
     }
 
+    // Parse form data
     const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const banner = formData.get("banner") as File | null;
-    const posters = formData.get("posters") as File | null;
-    const partnerGuildId = formData.get("partnerGuildId") as string || null;
-    const notes = formData.get("notes") as string || "";
-
+    
+    // Extract and validate required fields
+    const name = formData.get("name")?.toString();
     if (!name) {
       return NextResponse.json(
         { error: "Partner name is required" },
@@ -66,27 +87,42 @@ export async function PUT(
       );
     }
 
-    // If a new banner is uploaded, update the hasBanner flag
-    const hasBanner = banner ? true : existingPartner.hasBanner;
-    // If new posters are uploaded, update the hasPosters flag
-    const hasPosters = posters ? true : existingPartner.hasPosters;
-
-    // Verify partnerGuildId if provided
-    if (partnerGuildId && partnerGuildId !== existingPartner.partnerGuildId) {
-      const partnerGuild = await prismaClient.guild.findUnique({
-        where: {
-          guildId: partnerGuildId
-        }
-      });
-      
-      if (!partnerGuild) {
-        return NextResponse.json(
-          { error: "Partner guild not found" },
-          { status: 400 }
-        );
+    // Extract other fields
+    const description = formData.get("description")?.toString() || "";
+    const partnerGuildId = formData.get("partnerGuildId")?.toString() || null;
+    
+    // Handle notes (supports both string and JSON array)
+    let notes = [];
+    const notesData = formData.get("notes")?.toString();
+    if (notesData) {
+      try {
+        notes = JSON.parse(notesData);
+      } catch (e) {
+        // If not valid JSON, use as a single note
+        notes = [notesData];
       }
     }
+    
+    // Handle tags
+    let tags = [];
+    const tagsData = formData.get("tags")?.toString();
+    if (tagsData) {
+      try {
+        tags = JSON.parse(tagsData);
+      } catch (e) {
+        console.error("Error parsing tags:", e);
+        tags = [];
+      }
+    }
+    
+    // Handle publicLink
+    const publicLink = formData.get("publicLink")?.toString() || "";
 
+    // Handle file uploads
+    const banner = formData.get("banner") as File;
+    const posters = formData.get("posters") as File;
+
+    // Update partner
     const updatedPartner = await prismaClient.guildPartner.update({
       where: {
         id: partner,
@@ -94,61 +130,47 @@ export async function PUT(
       data: {
         name,
         description,
-        hasBanner,
-        hasPosters,
+        hasBanner: banner ? true : existingPartner.hasBanner,
+        hasPosters: posters ? true : existingPartner.hasPosters,
         partnerGuildId,
-        notes,
+        notes: JSON.stringify(notes),
+        tags,
+        publicLink,
       },
     });
 
-    // Create directories if they don't exist
-    const publicDir = path.join(process.cwd(), "public");
-    const serverDir = path.join(publicDir, "server", serverDownload.id);
-    const partnerDir = path.join(serverDir, partner);
-    
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(serverDir)) {
-      fs.mkdirSync(serverDir, { recursive: true });
-    }
-    
-    if (!fs.existsSync(partnerDir)) {
-      fs.mkdirSync(partnerDir, { recursive: true });
-    }
-
+    // Save files if provided
     if (banner) {
-      // Lösche altes Banner, falls vorhanden
-      const bannerPath = path.join(partnerDir, "banner.png");
-      if (fs.existsSync(bannerPath)) {
-        fs.unlinkSync(bannerPath);
-      }
-
-      // Speichere das neue Banner
-      const arrayBuffer = await banner.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      fs.writeFileSync(path.join(partnerDir, "banner.png"), buffer);
+      const buffer = Buffer.from(await banner.arrayBuffer());
+      const dir = path.join(
+        process.cwd(),
+        "public",
+        "server",
+        serverDownload.id,
+        partner
+      );
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "banner.png"), buffer);
     }
 
     if (posters) {
-      // Lösche alte Werbeplakate, falls vorhanden
-      const postersPath = path.join(partnerDir, "posters.png");
-      if (fs.existsSync(postersPath)) {
-        fs.unlinkSync(postersPath);
-      }
-
-      // Speichere die neuen Werbeplakate
-      const arrayBuffer = await posters.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      fs.writeFileSync(path.join(partnerDir, "posters.png"), buffer);
+      const buffer = Buffer.from(await posters.arrayBuffer());
+      const dir = path.join(
+        process.cwd(),
+        "public",
+        "server",
+        serverDownload.id,
+        partner
+      );
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "posters.png"), buffer);
     }
 
     return NextResponse.json(updatedPartner);
   } catch (error) {
     console.error("Error updating partner:", error);
     return NextResponse.json(
-      { error: "Failed to update partner" },
+      { error: "Failed to update partner", details: error },
       { status: 500 }
     );
   }
@@ -158,8 +180,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { server: string; partner: string } }
 ) {
-  const session = await getSession();
-  if (!session || !session.access_token) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -169,81 +191,116 @@ export async function DELETE(
     return NextResponse.json({ error: "Server not found" }, { status: 404 });
   }
 
+  const accessToken = session.accessToken as string;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Missing access token" }, { status: 401 });
+  }
+
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.access_token
+    accessToken
   );
+  
+  // Check if user has permission to manage partners
   if (
     !serverMember ||
-    !serverMember.permissions_names ||
-    !serverMember.permissions_names.includes("ManageGuild") ||
-    !serverMember.permissions_names.includes("Administrator")
+    !serverMember.permissions ||
+    !hasPermission("MANAGE_GUILD", serverMember.permissions)
   ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "You don't have permission to manage partners" },
+      { status: 403 }
+    );
   }
 
   try {
-    // Check if partner exists and belongs to this server
-    const existingPartner = await prismaClient.guildPartner.findFirst({
+    // Find the partner
+    const existingPartner = await prismaClient.guildPartner.findUnique({
       where: {
         id: partner,
-        guildId: serverDownload.id,
       },
     });
 
     if (!existingPartner) {
+      return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+    }
+
+    // Ensure user is deleting a partner from their own server
+    if (existingPartner.guildId !== serverDownload.id) {
       return NextResponse.json(
-        { error: "Partner not found" },
-        { status: 404 }
+        { error: "You can only delete partners from your own server" },
+        { status: 403 }
       );
     }
 
-    // Delete the partner
+    // Delete the partner record
     await prismaClient.guildPartner.delete({
       where: {
         id: partner,
       },
     });
 
-    // Pfad zum Partner-Verzeichnis
-    const partnerDir = path.join(
-      process.cwd(),
-      "public",
-      "server",
-      serverDownload.id,
-      partner
-    );
-
-    // Lösche Banner, falls vorhanden
-    if (existingPartner.hasBanner) {
-      const bannerPath = path.join(partnerDir, "banner.png");
-      
-      if (fs.existsSync(bannerPath)) {
-        fs.unlinkSync(bannerPath);
-      }
-    }
-    
-    // Lösche Werbeplakate, falls vorhanden
-    if (existingPartner.hasPosters) {
-      const postersPath = path.join(partnerDir, "posters.png");
-      
-      if (fs.existsSync(postersPath)) {
-        fs.unlinkSync(postersPath);
-      }
-    }
-    
-    // Versuche, das Verzeichnis zu löschen, wenn es leer ist
+    // Delete banner and poster files if they exist
     try {
-      fs.rmdirSync(partnerDir);
+      // Check both directory structures for files
+      const serverDirPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner);
+      const uploadsDirPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner);
+      
+      // Remove banner files
+      if (existingPartner.hasBanner) {
+        const serverBannerPath = path.join(serverDirPath, "banner.png");
+        if (fs.existsSync(serverBannerPath)) {
+          fs.unlinkSync(serverBannerPath);
+        }
+        
+        const uploadsBannerPath = path.join(uploadsDirPath, "banner.png");
+        if (fs.existsSync(uploadsBannerPath)) {
+          fs.unlinkSync(uploadsBannerPath);
+        }
+      }
+      
+      // Remove poster files
+      if (existingPartner.hasPosters) {
+        const serverPosterPath = path.join(serverDirPath, "posters.png");
+        if (fs.existsSync(serverPosterPath)) {
+          fs.unlinkSync(serverPosterPath);
+        }
+        
+        const uploadsPosterPath = path.join(uploadsDirPath, "posters.png");
+        if (fs.existsSync(uploadsPosterPath)) {
+          fs.unlinkSync(uploadsPosterPath);
+        }
+        
+        // Check alternate poster file name
+        const serverPosterAltPath = path.join(serverDirPath, "poster.png");
+        if (fs.existsSync(serverPosterAltPath)) {
+          fs.unlinkSync(serverPosterAltPath);
+        }
+        
+        const uploadsPosterAltPath = path.join(uploadsDirPath, "poster.png");
+        if (fs.existsSync(uploadsPosterAltPath)) {
+          fs.unlinkSync(uploadsPosterAltPath);
+        }
+      }
+      
+      // Remove empty directories
+      if (fs.existsSync(serverDirPath) && fs.readdirSync(serverDirPath).length === 0) {
+        fs.rmdirSync(serverDirPath);
+      }
+      
+      if (fs.existsSync(uploadsDirPath) && fs.readdirSync(uploadsDirPath).length === 0) {
+        fs.rmdirSync(uploadsDirPath);
+      }
     } catch (error) {
-      // Ignoriere Fehler, wenn das Verzeichnis nicht leer ist
+      console.error("Error deleting partner files:", error);
+      // Continue execution even if file deletion fails
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting partner:", error);
     return NextResponse.json(
-      { error: "Failed to delete partner" },
+      { error: "Failed to delete partner", details: error },
       { status: 500 }
     );
   }
@@ -267,19 +324,39 @@ export async function GET(
       return new NextResponse("Partner not found", { status: 404 });
     }
 
+    // Determine correct directory structure based on existing files
     let filePath;
+    
+    // First try the 'uploads/partners' directory structure
     if (type === "banner" && partner.hasBanner) {
-      filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png");
-    } else if (type === "poster" && partner.hasPosters) {
-      filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png");
+      filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "banner.png");
+      if (!fs.existsSync(filePath)) {
+        // Try alternate 'server' directory structure
+        filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png");
+      }
+    } else if ((type === "poster" || type === "posters") && partner.hasPosters) {
+      // Check both "poster" and "posters" naming conventions
+      filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "poster.png");
+      if (!fs.existsSync(filePath)) {
+        filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "posters.png");
+        if (!fs.existsSync(filePath)) {
+          // Try alternate 'server' directory structure
+          filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "poster.png");
+          if (!fs.existsSync(filePath)) {
+            filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png");
+          }
+        }
+      }
     } else {
       return new NextResponse("Image not found", { status: 404 });
     }
 
     if (!fs.existsSync(filePath)) {
-      return new NextResponse("Image not found", { status: 404 });
+      console.error("Image file not found at path:", filePath);
+      return new NextResponse("Image file not found", { status: 404 });
     }
 
+    console.log("Serving image from path:", filePath);
     const imageBuffer = fs.readFileSync(filePath);
     return new NextResponse(imageBuffer, {
       headers: {

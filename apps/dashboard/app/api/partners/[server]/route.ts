@@ -23,6 +23,17 @@ type GuildPartner = {
   updatedAt: Date;
 };
 
+// Helper function to check if user has required permission
+function hasPermission(requiredPermission: string, permissions: string) {
+  // Discord permission "MANAGE_GUILD" is represented by the bit 0x20 (32 in decimal)
+  if (requiredPermission === "MANAGE_GUILD") {
+    const permissionBit = BigInt(0x20);
+    const permissionsValue = BigInt(permissions);
+    return (permissionsValue & permissionBit) === permissionBit;
+  }
+  return false;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { server: string } }
@@ -108,24 +119,20 @@ export async function POST(
   );
   if (
     !serverMember ||
-    !serverMember.permissions_names ||
-    !serverMember.permissions_names.includes("ManageGuild") ||
-    !serverMember.permissions_names.includes("Administrator")
+    !serverMember.permissions ||
+    !hasPermission("MANAGE_GUILD", serverMember.permissions)
   ) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "You don't have permission to manage partners" },
+      { status: 403 }
+    );
   }
 
   try {
     const formData = await request.formData();
-    const name = formData.get("name") as string;
-    const description = formData.get("description") as string;
-    const banner = formData.get("banner") as File | null;
-    const posters = formData.get("posters") as File | null;
-    const partnerGuildId = formData.get("partnerGuildId") ? (formData.get("partnerGuildId") as string) : null;
-    const notes = formData.get("notes") ? (formData.get("notes") as string) : "";
-    const tags = formData.get("tags") as string;
-    const publicLink = formData.get("publicLink") as string;
-
+    
+    // Extract and validate required fields
+    const name = formData.get("name")?.toString();
     if (!name) {
       return NextResponse.json(
         { error: "Partner name is required" },
@@ -133,22 +140,42 @@ export async function POST(
       );
     }
 
-    // Verify partnerGuildId if provided
-    if (partnerGuildId) {
-      const partnerGuild = await prismaClient.guild.findUnique({
-        where: {
-          guildId: partnerGuildId
-        }
-      });
-      
-      if (!partnerGuild) {
-        return NextResponse.json(
-          { error: "Partner guild not found" },
-          { status: 400 }
-        );
+    // Extract other fields
+    const description = formData.get("description")?.toString() || "";
+    const partnerGuildId = formData.get("partnerGuildId")?.toString() || null;
+    
+    // Handle notes (supports both string and JSON array)
+    let notes = [];
+    const notesData = formData.get("notes")?.toString();
+    if (notesData) {
+      try {
+        notes = JSON.parse(notesData);
+      } catch (e) {
+        // If not valid JSON, use as a single note
+        notes = [notesData];
       }
     }
+    
+    // Handle tags
+    let tags = [];
+    const tagsData = formData.get("tags")?.toString();
+    if (tagsData) {
+      try {
+        tags = JSON.parse(tagsData);
+      } catch (e) {
+        console.error("Error parsing tags:", e);
+        tags = [];
+      }
+    }
+    
+    // Handle publicLink
+    const publicLink = formData.get("publicLink")?.toString() || "";
 
+    // Handle file uploads
+    const banner = formData.get("banner") as File;
+    const posters = formData.get("posters") as File;
+
+    // Create partner record
     const partner = await prismaClient.guildPartner.create({
       data: {
         guildId: serverDownload.id,
@@ -157,65 +184,44 @@ export async function POST(
         hasBanner: !!banner,
         hasPosters: !!posters,
         partnerGuildId,
-        notes,
-        tags: tags ? JSON.parse(tags) : [],
-        publicLink: publicLink || null,
+        notes: JSON.stringify(notes),
+        tags,
+        publicLink,
       },
     });
 
+    // Save files if provided
     if (banner) {
-      // Create directories if they don't exist
-      const publicDir = path.join(process.cwd(), "public");
-      const serverDir = path.join(publicDir, "server", serverDownload.id);
-      const partnerDir = path.join(serverDir, partner.id);
-      
-      if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(serverDir)) {
-        fs.mkdirSync(serverDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(partnerDir)) {
-        fs.mkdirSync(partnerDir, { recursive: true });
-      }
-
-      // Save the banner
-      const arrayBuffer = await banner.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      fs.writeFileSync(path.join(partnerDir, "banner.png"), buffer);
+      const buffer = Buffer.from(await banner.arrayBuffer());
+      const dir = path.join(
+        process.cwd(),
+        "public",
+        "server",
+        serverDownload.id,
+        partner.id
+      );
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "banner.png"), buffer);
     }
 
     if (posters) {
-      // Create directories if they don't exist
-      const publicDir = path.join(process.cwd(), "public");
-      const serverDir = path.join(publicDir, "server", serverDownload.id);
-      const partnerDir = path.join(serverDir, partner.id);
-      
-      if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(serverDir)) {
-        fs.mkdirSync(serverDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(partnerDir)) {
-        fs.mkdirSync(partnerDir, { recursive: true });
-      }
-
-      // Save the poster
-      const arrayBuffer = await posters.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      fs.writeFileSync(path.join(partnerDir, "posters.png"), buffer);
+      const buffer = Buffer.from(await posters.arrayBuffer());
+      const dir = path.join(
+        process.cwd(),
+        "public",
+        "server",
+        serverDownload.id,
+        partner.id
+      );
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, "posters.png"), buffer);
     }
 
-    return NextResponse.json(partner, { status: 201 });
+    return NextResponse.json(partner);
   } catch (error) {
     console.error("Error creating partner:", error);
     return NextResponse.json(
-      { error: "Failed to create partner" },
+      { error: "Error creating partner", details: error },
       { status: 500 }
     );
   }
