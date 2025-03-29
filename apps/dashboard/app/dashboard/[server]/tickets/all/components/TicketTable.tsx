@@ -95,7 +95,7 @@ const TicketTable: FC<TicketTableProps> = ({
       cell: ({ row }) => {
         return (
           <div className="text-right">
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="secondary" size="icon" asChild>
               <Link href={`/dashboard/${serverId}/tickets/${row.original.id}`}>
                 <ExternalLink className="h-4 w-4" />
               </Link>
@@ -114,7 +114,7 @@ const TicketTable: FC<TicketTableProps> = ({
       {totalPages > 1 && (
         <div className="flex items-center justify-center space-x-2 py-4">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             disabled={currentPage <= 1}
             asChild
@@ -130,7 +130,7 @@ const TicketTable: FC<TicketTableProps> = ({
             Seite {currentPage} von {totalPages}
           </span>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             disabled={currentPage >= totalPages}
             asChild

@@ -5,3 +5,6 @@ export * from "./getGuild";
 export * from "./getGuildRoles";
 export * from "./getMemberGuilds";
 export * from "./isBotInServer";
+export * from "./isGuildAdmin";
+export * from "./getGuildInfo";
+export * from "./getGuildMember";

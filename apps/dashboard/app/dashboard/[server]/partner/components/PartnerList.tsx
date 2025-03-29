@@ -276,7 +276,7 @@ export const PartnerList = ({
                   </button>
                   <button
                     onClick={() => handleDeletePartner(partner.id)}
-                    className={cn(buttonVariants({ variant: "danger", size: "icon" }))}
+                    className={cn(buttonVariants({ variant: "red", size: "icon" }))}
                   >
                     <Icons.Trash className={iconVariants({ variant: "button" })} />
                   </button>

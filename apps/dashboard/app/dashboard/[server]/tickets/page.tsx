@@ -5,7 +5,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink } from '@/components/ui/brea
 import { ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Buttons';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import TicketDashboard from './components/TicketDashboard';
@@ -17,7 +17,7 @@ export default async function TicketsPage({ params }: { params: { server: string
   
   // Guild-Daten abrufen und Berechtigungen prüfen
   const guild = await getGuildInfo(server);
-  const isAdmin = await isGuildAdmin(null, server);
+  const isAdmin = await isGuildAdmin(server);
   
   if (!guild || !isAdmin) redirect('/dashboard');
 
@@ -65,7 +65,7 @@ export default async function TicketsPage({ params }: { params: { server: string
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="secondary" asChild>
             <Link href={`/dashboard/${server}/tickets/all`}>
               Alle Tickets
             </Link>

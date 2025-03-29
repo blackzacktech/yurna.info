@@ -50,7 +50,7 @@ const QuestionReorderButtons: React.FC<QuestionReorderButtonsProps> = ({
   return (
     <div className="flex gap-1">
       <Button
-        variant="ghost"
+        variant="secondary"
         size="icon"
         onClick={() => handleReorder('up')}
         disabled={isFirst}
@@ -59,7 +59,7 @@ const QuestionReorderButtons: React.FC<QuestionReorderButtonsProps> = ({
         <Icons.arrowUp className={iconVariants({ variant: "small" })} />
       </Button>
       <Button
-        variant="ghost"
+        variant="secondary"
         size="icon"
         onClick={() => handleReorder('down')}
         disabled={isLast}
