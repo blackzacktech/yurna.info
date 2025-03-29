@@ -19,37 +19,39 @@ export async function GET(
       return new NextResponse("Partner not found", { status: 404 });
     }
 
-    if (!partner.hasBanner) {
-      return new NextResponse("Partner has no banner", { status: 404 });
+    if (!partner.hasPosters) {
+      return new NextResponse("Partner has no poster", { status: 404 });
     }
 
     // Determine correct directory structure based on existing files
     let filePath = null;
     const possiblePaths = [];
     
-    // All possible file paths to check for banner
-    // Uploads directory paths
-    possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "banner.png"));
-    // Server directory paths
-    possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png"));
+    // All possible file paths to check for poster
+    // Uploads directory paths (both naming conventions)
+    possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "poster.png"));
+    possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "posters.png"));
+    // Server directory paths (both naming conventions)
+    possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "poster.png"));
+    possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png"));
     
     // Check all possible paths
     for (const pathToCheck of possiblePaths) {
-      console.log("Checking banner path:", pathToCheck);
+      console.log("Checking poster path:", pathToCheck);
       if (fs.existsSync(pathToCheck)) {
         filePath = pathToCheck;
-        console.log("Found banner image at:", filePath);
+        console.log("Found poster image at:", filePath);
         break;
       }
     }
 
     if (!filePath) {
-      console.error("Banner image file not found in any of these paths:", possiblePaths);
-      return new NextResponse("Banner image file not found", { status: 404 });
+      console.error("Poster image file not found in any of these paths:", possiblePaths);
+      return new NextResponse("Poster image file not found", { status: 404 });
     }
 
     const imageBuffer = fs.readFileSync(filePath);
-    console.log("Successfully read banner buffer of size:", imageBuffer.length);
+    console.log("Successfully read poster buffer of size:", imageBuffer.length);
     
     return new NextResponse(imageBuffer, {
       headers: {
@@ -60,7 +62,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error serving banner image:", error);
+    console.error("Error serving poster image:", error);
     return new NextResponse("Error serving image", { status: 500 });
   }
 }

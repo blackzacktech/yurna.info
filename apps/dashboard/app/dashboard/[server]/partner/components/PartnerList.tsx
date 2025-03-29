@@ -115,14 +115,15 @@ export const PartnerList = ({
   // Function to copy image URL to clipboard
   const copyImageUrlToClipboard = (partnerId: string, type: "banner" | "poster") => {
     const baseUrl = window.location.origin;
-    const imageUrl = `${baseUrl}/api/partners/${serverId}/${partnerId}/${type}.png?timestamp=${imageTimestamp}`;
+    // Verwende die /server/... Route statt der /api/... Route
+    const imageUrl = `${baseUrl}/server/${serverId}/${partnerId}/${type}.png?timestamp=${imageTimestamp}`;
     
     navigator.clipboard.writeText(imageUrl)
       .then(() => {
         toast({
-          title: "URL kopiert!",
+          title: "URL kopiert",
           description: `Die Bild-URL wurde in die Zwischenablage kopiert.`,
-          variant: "default",
+          variant: "success",
         });
       })
       .catch((error) => {
@@ -143,63 +144,43 @@ export const PartnerList = ({
   const [editBannerPreviewUrl, setEditBannerPreviewUrl] = useState<string | null>(null);
   const [editPosterPreviewUrl, setEditPosterPreviewUrl] = useState<string | null>(null);
   
-  // Handle file selection for new partner banner
+  // Handle Banner file change
   const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      
-      // Create a preview URL for the selected file
-      const objectUrl = URL.createObjectURL(file);
-      setBannerPreviewUrl(objectUrl);
-      
-      // Clean up previous preview URL
-      return () => URL.revokeObjectURL(objectUrl);
+      const url = URL.createObjectURL(file);
+      setBannerPreviewUrl(url);
     }
   };
-  
-  // Handle file selection for new partner poster
+
+  // Handle Poster file change
   const handlePosterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedPosterFile(file);
-      
-      // Create a preview URL for the selected file
-      const objectUrl = URL.createObjectURL(file);
-      setPosterPreviewUrl(objectUrl);
-      
-      // Clean up previous preview URL
-      return () => URL.revokeObjectURL(objectUrl);
+      const url = URL.createObjectURL(file);
+      setPosterPreviewUrl(url);
     }
   };
-  
-  // Handle file selection for edit partner banner
-  const handleEditBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  // Handle Edit Banner file change
+  const handleEditBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setEditSelectedFile(file);
-      
-      // Create a preview URL for the selected file
-      const objectUrl = URL.createObjectURL(file);
-      setEditBannerPreviewUrl(objectUrl);
-      
-      // Clean up previous preview URL
-      return () => URL.revokeObjectURL(objectUrl);
+      const url = URL.createObjectURL(file);
+      setEditBannerPreviewUrl(url);
     }
   };
-  
-  // Handle file selection for edit partner poster
-  const handleEditPosterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  // Handle Edit Poster file change
+  const handleEditPosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setEditSelectedPosterFile(file);
-      
-      // Create a preview URL for the selected file
-      const objectUrl = URL.createObjectURL(file);
-      setEditPosterPreviewUrl(objectUrl);
-      
-      // Clean up previous preview URL
-      return () => URL.revokeObjectURL(objectUrl);
+      const url = URL.createObjectURL(file);
+      setEditPosterPreviewUrl(url);
     }
   };
   
@@ -209,13 +190,13 @@ export const PartnerList = ({
       const partner = partners.find(p => p.id === editingPartnerId);
       if (partner) {
         if (partner.hasBanner) {
-          setEditBannerPreviewUrl(`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`);
+          setEditBannerPreviewUrl(`/server/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`);
         } else {
           setEditBannerPreviewUrl(null);
         }
         
         if (partner.hasPosters) {
-          setEditPosterPreviewUrl(`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}&type=poster`);
+          setEditPosterPreviewUrl(`/server/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}&type=poster`);
         } else {
           setEditPosterPreviewUrl(null);
         }
@@ -646,7 +627,7 @@ export const PartnerList = ({
                     id="edit-banner"
                     type="file"
                     accept="image/*"
-                    onChange={handleEditBannerFileChange}
+                    onChange={handleEditBannerChange}
                   />
                   {partner.hasBanner && !editSelectedFile && (
                     <span className="text-xs text-neutral-400">Aktuelles Banner wird beibehalten, wenn kein neues Bild ausgewählt wird</span>
@@ -691,7 +672,7 @@ export const PartnerList = ({
                     id="edit-poster"
                     type="file"
                     accept="image/*"
-                    onChange={handleEditPosterFileChange}
+                    onChange={handleEditPosterChange}
                   />
                   {partner.hasPosters && !editSelectedPosterFile && (
                     <span className="text-xs text-neutral-400">Aktuelles Poster wird beibehalten, wenn kein neues Bild ausgewählt wird</span>
@@ -766,7 +747,7 @@ export const PartnerList = ({
                   {partner.hasBanner && (
                     <div className="relative h-40 w-full overflow-hidden">
                       <Image
-                        src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`}
+                        src={`/server/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`}
                         alt={`${partner.name} Banner`}
                         width={640}
                         height={160}
@@ -790,7 +771,7 @@ export const PartnerList = ({
                   {partner.hasPosters && (
                     <div className="relative h-40 w-full overflow-hidden">
                       <Image
-                        src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}&type=poster`}
+                        src={`/server/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}`}
                         alt={`${partner.name} Poster`}
                         width={640}
                         height={160}
