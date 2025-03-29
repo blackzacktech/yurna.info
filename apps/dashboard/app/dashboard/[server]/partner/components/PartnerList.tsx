@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/Buttons";
 import { Block } from "@/components/ui/Block";
 import { Icons, iconVariants } from "@/components/ui/Icons";
@@ -10,12 +10,24 @@ import { cn } from "@/lib/utils";
 import type { GuildPartner } from "@prisma/client";
 import Image from "next/image";
 
+// Erweiterte Typdefinition für Partner mit Stats
+type PartnerWithStats = GuildPartner & {
+  partnerStats?: {
+    hasYurna: boolean;
+    userCount?: number;
+    partnershipDays: number;
+  };
+  partnerGuild?: {
+    guildId: string;
+  } | null;
+};
+
 export const PartnerList = ({
   serverId,
   partners,
 }: {
   serverId: string;
-  partners: GuildPartner[];
+  partners: PartnerWithStats[];
 }) => {
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
@@ -23,12 +35,16 @@ export const PartnerList = ({
   const [newPartner, setNewPartner] = useState({
     name: "",
     description: "",
+    partnerGuildId: "",
+    notes: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
   const [editPartner, setEditPartner] = useState({
     name: "",
     description: "",
+    partnerGuildId: "",
+    notes: "",
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
 
@@ -40,6 +56,12 @@ export const PartnerList = ({
     const formData = new FormData();
     formData.append("name", newPartner.name);
     formData.append("description", newPartner.description || "");
+    if (newPartner.partnerGuildId) {
+      formData.append("partnerGuildId", newPartner.partnerGuildId);
+    }
+    if (newPartner.notes) {
+      formData.append("notes", newPartner.notes);
+    }
     if (selectedFile) {
       formData.append("banner", selectedFile);
     }
@@ -51,7 +73,7 @@ export const PartnerList = ({
       });
 
       if (response.ok) {
-        setNewPartner({ name: "", description: "" });
+        setNewPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
         setSelectedFile(null);
         setIsAdding(false);
         router.refresh();
@@ -71,6 +93,12 @@ export const PartnerList = ({
     const formData = new FormData();
     formData.append("name", editPartner.name);
     formData.append("description", editPartner.description || "");
+    if (editPartner.partnerGuildId) {
+      formData.append("partnerGuildId", editPartner.partnerGuildId);
+    }
+    if (editPartner.notes) {
+      formData.append("notes", editPartner.notes);
+    }
     if (editSelectedFile) {
       formData.append("banner", editSelectedFile);
     }
@@ -82,7 +110,7 @@ export const PartnerList = ({
       });
 
       if (response.ok) {
-        setEditPartner({ name: "", description: "" });
+        setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
         setEditSelectedFile(null);
         setEditingPartnerId(null);
         router.refresh();
@@ -113,11 +141,13 @@ export const PartnerList = ({
     }
   };
 
-  const startEditing = (partner: GuildPartner) => {
+  const startEditing = (partner: PartnerWithStats) => {
     setEditingPartnerId(partner.id);
     setEditPartner({
       name: partner.name,
       description: partner.description || "",
+      partnerGuildId: partner.partnerGuild?.guildId || "",
+      notes: partner.notes || "",
     });
   };
 
@@ -153,6 +183,27 @@ export const PartnerList = ({
                   id="edit-description"
                   value={editPartner.description}
                   onChange={(e) => setEditPartner({ ...editPartner, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit-partner-guild-id" className="mb-1 block text-sm font-medium">
+                  Partner Guild ID
+                </label>
+                <Input
+                  id="edit-partner-guild-id"
+                  value={editPartner.partnerGuildId}
+                  onChange={(e) => setEditPartner({ ...editPartner, partnerGuildId: e.target.value })}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit-notes" className="mb-1 block text-sm font-medium">
+                  Notes
+                </label>
+                <Textarea
+                  id="edit-notes"
+                  value={editPartner.notes}
+                  onChange={(e) => setEditPartner({ ...editPartner, notes: e.target.value })}
                   rows={3}
                 />
               </div>
@@ -205,18 +256,57 @@ export const PartnerList = ({
                   </button>
                 </div>
               </div>
-              {partner.description && <p className="mt-2 text-neutral-300">{partner.description}</p>}
-              {partner.hasBanner && (
-                <div className="mt-3 overflow-hidden rounded-md">
-                  <Image
-                    src={`/server/${serverId}/${partner.id}/banner.png`}
-                    alt={`${partner.name} banner`}
-                    width={800}
-                    height={200}
-                    className="h-auto w-full object-cover"
-                  />
+              <div className="mt-2 flex flex-row gap-4">
+                {partner.hasBanner && (
+                  <div className="shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      src={`/server/${serverId}/${partner.id}/banner.png`}
+                      alt={`${partner.name} banner`}
+                      width={120}
+                      height={60}
+                      className="h-auto w-[120px] object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  {partner.description && <p className="text-neutral-300">{partner.description}</p>}
+                  
+                  {/* Partnerstatistiken hinzufügen */}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <div className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
+                      <Icons.CalendarDays className={iconVariants({ variant: "small" })} />
+                      <span className="ml-1">{partner.partnerStats?.partnershipDays || 0} Tage Partnerschaft</span>
+                    </div>
+                    
+                    {partner.partnerStats?.hasYurna && (
+                      <>
+                        <div className="inline-flex items-center rounded-md bg-green-500/20 px-2 py-1 text-xs text-green-400">
+                          <Icons.Check className={iconVariants({ variant: "small" })} />
+                          <span className="ml-1">Nutzt Yurna Bot</span>
+                        </div>
+                        
+                        {partner.partnerStats.userCount !== undefined && (
+                          <div className="inline-flex items-center rounded-md bg-purple-500/20 px-2 py-1 text-xs text-purple-400">
+                            <Icons.Users className={iconVariants({ variant: "small" })} />
+                            <span className="ml-1">{partner.partnerStats.userCount} Nachrichten</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Notizen zu Partner */}
+                  {partner.notes && (
+                    <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-2">
+                      <div className="flex items-center text-xs text-neutral-400">
+                        <Icons.StickyNote className={iconVariants({ variant: "small" })} />
+                        <span className="ml-1 font-medium">Notizen:</span>
+                      </div>
+                      <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </Block>
@@ -246,6 +336,27 @@ export const PartnerList = ({
                 onChange={(e) => setNewPartner({ ...newPartner, description: e.target.value })}
                 rows={3}
                 placeholder="Optional description of the partner server"
+              />
+            </div>
+            <div>
+              <label htmlFor="partner-partner-guild-id" className="mb-1 block text-sm font-medium">
+                Partner Guild ID
+              </label>
+              <Input
+                id="partner-partner-guild-id"
+                value={newPartner.partnerGuildId}
+                onChange={(e) => setNewPartner({ ...newPartner, partnerGuildId: e.target.value })}
+              />
+            </div>
+            <div>
+              <label htmlFor="partner-notes" className="mb-1 block text-sm font-medium">
+                Notes
+              </label>
+              <Textarea
+                id="partner-notes"
+                value={newPartner.notes}
+                onChange={(e) => setNewPartner({ ...newPartner, notes: e.target.value })}
+                rows={3}
               />
             </div>
             <div>

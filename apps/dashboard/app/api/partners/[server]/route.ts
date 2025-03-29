@@ -41,8 +41,57 @@ export async function GET(
       orderBy: {
         createdAt: "desc",
       },
+      include: {
+        partnerGuild: {
+          select: {
+            guildId: true,
+          },
+        },
+      },
     });
-    return NextResponse.json(partners);
+    
+    // Erweitere die Partner-Daten mit Server-Statistiken für Partner, die auch Yurna nutzen
+    const partnersWithStats = await Promise.all(
+      partners.map(async (partner) => {
+        if (partner.partnerGuildId) {
+          try {
+            // Hole Mitgliederstatistiken für Partner-Gilden
+            const memberStats = await prismaClient.guildMessage.findFirst({
+              where: {
+                guildId: partner.partnerGuildId,
+              },
+              orderBy: {
+                date: 'desc'
+              }
+            });
+            
+            const userCount = memberStats ? memberStats.messages : 0;
+            
+            return {
+              ...partner,
+              partnerStats: {
+                hasYurna: true,
+                userCount,
+                partnershipDays: Math.floor((Date.now() - partner.partnershipDate.getTime()) / (1000 * 60 * 60 * 24))
+              }
+            };
+          } catch (error) {
+            console.error("Error fetching partner stats:", error);
+            return partner;
+          }
+        }
+        
+        return {
+          ...partner,
+          partnerStats: {
+            hasYurna: false,
+            partnershipDays: Math.floor((Date.now() - partner.partnershipDate.getTime()) / (1000 * 60 * 60 * 24))
+          }
+        };
+      })
+    );
+    
+    return NextResponse.json(partnersWithStats);
   } catch (error) {
     console.error("Error fetching partners:", error);
     return NextResponse.json(
@@ -85,6 +134,8 @@ export async function POST(
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const banner = formData.get("banner") as File | null;
+    const partnerGuildId = formData.get("partnerGuildId") as string || null;
+    const notes = formData.get("notes") as string || "";
 
     if (!name) {
       return NextResponse.json(
@@ -93,12 +144,30 @@ export async function POST(
       );
     }
 
+    // Verify partnerGuildId if provided
+    if (partnerGuildId) {
+      const partnerGuild = await prismaClient.guild.findUnique({
+        where: {
+          guildId: partnerGuildId
+        }
+      });
+      
+      if (!partnerGuild) {
+        return NextResponse.json(
+          { error: "Partner guild not found" },
+          { status: 400 }
+        );
+      }
+    }
+
     const partner = await prismaClient.guildPartner.create({
       data: {
         guildId: serverDownload.id,
         name,
         description,
         hasBanner: !!banner,
+        partnerGuildId,
+        notes,
       },
     });
 

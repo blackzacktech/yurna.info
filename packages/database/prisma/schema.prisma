@@ -140,6 +140,7 @@ model Guild {
  guildWelcomeMessage     GuildWelcomeMessage?
  guildLeaveMessage       GuildLeaveMessage?
  guildPartners           GuildPartner[]
+ partnerGuilds           GuildPartner[]  @relation("PartnerGuilds")
 
  @@map(name: "guilds")
 }
@@ -379,14 +380,18 @@ model GuildWarns {
 
 // Guild partner servers
 model GuildPartner {
- id          String   @id @default(cuid())
- guildId     String   @map(name: "guild_id")
- name        String
- description String?  @db.Text
- hasBanner   Boolean  @default(false) @map(name: "has_banner")
- createdAt   DateTime @default(now()) @map(name: "created_at")
- updatedAt   DateTime @updatedAt @map(name: "updated_at")
- guild       Guild    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+ id               String   @id @default(cuid())
+ guildId          String   @map(name: "guild_id")
+ name             String
+ description      String?  @db.Text
+ hasBanner        Boolean  @default(false) @map(name: "has_banner")
+ partnerGuildId   String?  @map(name: "partner_guild_id")
+ partnershipDate  DateTime @default(now()) @map(name: "partnership_date")
+ notes            String?  @db.Text
+ createdAt        DateTime @default(now()) @map(name: "created_at")
+ updatedAt        DateTime @updatedAt @map(name: "updated_at")
+ guild            Guild    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+ partnerGuild     Guild?   @relation("PartnerGuilds", fields: [partnerGuildId], references: [guildId], onDelete: SetNull)
 
  @@map(name: "guild_partners")
 }
