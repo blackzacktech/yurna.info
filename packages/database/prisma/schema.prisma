@@ -398,6 +398,8 @@ model GuildPartner {
  partnerGuildId   String?  @map(name: "partner_guild_id")
  partnershipDate  DateTime @default(now()) @map(name: "partnership_date")
  notes            String?  @db.Text
+ tags             Json     @default("[]") @map(name: "tags")
+ publicLink       String?  @map(name: "public_link")
  createdAt        DateTime @default(now()) @map(name: "created_at")
  updatedAt        DateTime @updatedAt @map(name: "updated_at")
  guild            Guild    @relation(fields: [guildId], references: [guildId], onDelete: Cascade)

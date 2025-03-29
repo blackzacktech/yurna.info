@@ -20,6 +20,8 @@ type GuildPartner = {
   partnerGuildId: string | null;
   partnershipDate: Date;
   notes: string | null;
+  tags: string[];
+  publicLink: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -32,6 +34,8 @@ type PartnerWithStats = GuildPartner & {
   };
   partnerGuild?: {
     guildId: string;
+    memberCount?: number;
+    createdAt?: Date;
   } | null;
 };
 
@@ -45,22 +49,40 @@ export const PartnerList = ({
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newPartner, setNewPartner] = useState({
+  const [newPartner, setNewPartner] = useState<{
+    name: string;
+    description: string;
+    partnerGuildId: string;
+    notes: string;
+    tags: string[];
+    publicLink: string;
+  }>({
     name: "",
     description: "",
     partnerGuildId: "",
     notes: "",
+    tags: [],
+    publicLink: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedPosterFile, setSelectedPosterFile] = useState<File | null>(null);
   const [showNotesInput, setShowNotesInput] = useState(false);
   const [partnerNotes, setPartnerNotes] = useState<string[]>([]);
   const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
-  const [editPartner, setEditPartner] = useState({
+  const [editPartner, setEditPartner] = useState<{
+    name: string;
+    description: string;
+    partnerGuildId: string;
+    notes: string;
+    tags: string[];
+    publicLink: string;
+  }>({
     name: "",
     description: "",
     partnerGuildId: "",
     notes: "",
+    tags: [],
+    publicLink: "",
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
   const [editSelectedPosterFile, setEditSelectedPosterFile] = useState<File | null>(null);
@@ -87,6 +109,14 @@ export const PartnerList = ({
       formData.append("notes", newPartner.notes);
     }
     
+    if (newPartner.tags.length > 0) {
+      formData.append("tags", JSON.stringify(newPartner.tags));
+    }
+    
+    if (newPartner.publicLink) {
+      formData.append("publicLink", newPartner.publicLink);
+    }
+    
     if (selectedFile) {
       formData.append("banner", selectedFile);
     }
@@ -101,7 +131,7 @@ export const PartnerList = ({
       });
 
       if (response.ok) {
-        setNewPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
+        setNewPartner({ name: "", description: "", partnerGuildId: "", notes: "", tags: [], publicLink: "" });
         setSelectedFile(null);
         setSelectedPosterFile(null);
         setIsAdding(false);
@@ -134,6 +164,12 @@ export const PartnerList = ({
     if (editPartner.notes) {
       formData.append("notes", editPartner.notes);
     }
+    if (editPartner.tags.length > 0) {
+      formData.append("tags", JSON.stringify(editPartner.tags));
+    }
+    if (editPartner.publicLink) {
+      formData.append("publicLink", editPartner.publicLink);
+    }
     if (editSelectedFile) {
       formData.append("banner", editSelectedFile);
     }
@@ -148,7 +184,7 @@ export const PartnerList = ({
       });
 
       if (response.ok) {
-        setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
+        setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "", tags: [], publicLink: "" });
         setEditSelectedFile(null);
         setEditSelectedPosterFile(null);
         setEditingPartnerId(null);
@@ -187,6 +223,8 @@ export const PartnerList = ({
       description: partner.description || "",
       partnerGuildId: partner.partnerGuild?.guildId || "",
       notes: partner.notes || "",
+      tags: partner.tags || [],
+      publicLink: partner.publicLink || "",
     });
   };
 
@@ -244,6 +282,28 @@ export const PartnerList = ({
                   value={editPartner.notes}
                   onChange={(e) => setEditPartner({ ...editPartner, notes: e.target.value })}
                   rows={3}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit-tags" className="mb-1 block text-sm font-medium">
+                  Tags
+                </label>
+                <Input
+                  id="edit-tags"
+                  type="text"
+                  value={editPartner.tags.join(", ")}
+                  onChange={(e) => setEditPartner({ ...editPartner, tags: e.target.value.split(", ") })}
+                />
+              </div>
+              <div>
+                <label htmlFor="edit-public-link" className="mb-1 block text-sm font-medium">
+                  Public Link
+                </label>
+                <Input
+                  id="edit-public-link"
+                  type="text"
+                  value={editPartner.publicLink}
+                  onChange={(e) => setEditPartner({ ...editPartner, publicLink: e.target.value })}
                 />
               </div>
               <div>
@@ -361,20 +421,19 @@ export const PartnerList = ({
                     )}
                   </div>
                   
-                  {/* Notizen zu Partner */}
+                  {/* Notes */}
                   {partner.notes && (
                     <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-2">
                       <div className="flex items-center text-xs text-neutral-400">
-                        <Icons.StickyNote className={iconVariants({ variant: "small" })} />
-                        <span className="ml-1 font-medium">Notizen:</span>
+                        <Icons.FileText className={iconVariants({ variant: "small" })} />
+                        <span className="ml-1 font-medium">Notes:</span>
                       </div>
-                      {/* Check if notes is a JSON string and parse it if it is */}
                       {(() => {
                         try {
-                          const parsedNotes = JSON.parse(partner.notes || "[]");
+                          const parsedNotes = JSON.parse(partner.notes);
                           if (Array.isArray(parsedNotes)) {
                             return (
-                              <div className="mt-1 flex flex-col gap-2">
+                              <div className="mt-1">
                                 {parsedNotes.map((note, index) => (
                                   <p key={index} className="text-sm text-neutral-300">{note}</p>
                                 ))}
@@ -382,10 +441,79 @@ export const PartnerList = ({
                             );
                           }
                           return <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>;
-                        } catch (e) {
+                        } catch (error) {
                           return <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>;
                         }
                       })()}
+                    </div>
+                  )}
+                  
+                  {/* Partnership Information (only if bot is on partner server) */}
+                  {partner.partnerGuildId && partner.partnerGuild && (
+                    <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-2">
+                      <div className="flex items-center text-xs text-neutral-400">
+                        <Icons.Info className={iconVariants({ variant: "small" })} />
+                        <span className="ml-1 font-medium">Server Information:</span>
+                      </div>
+                      
+                      <div className="mt-2 space-y-1.5">
+                        {/* Partnership date */}
+                        <div className="flex items-center text-xs">
+                          <Icons.Calendar className={iconVariants({ variant: "small" })} />
+                          <span className="ml-1 text-neutral-300">Partner seit: {new Date(partner.partnershipDate).toLocaleDateString()}</span>
+                        </div>
+                        
+                        {/* Member count */}
+                        {partner.partnerGuild.memberCount && (
+                          <div className="flex items-center text-xs">
+                            <Icons.Users className={iconVariants({ variant: "small" })} />
+                            <span className="ml-1 text-neutral-300">Mitglieder: {partner.partnerGuild.memberCount.toLocaleString()}</span>
+                          </div>
+                        )}
+                        
+                        {/* Server creation date */}
+                        {partner.partnerGuild.createdAt && (
+                          <div className="flex items-center text-xs">
+                            <Icons.Clock className={iconVariants({ variant: "small" })} />
+                            <span className="ml-1 text-neutral-300">Erstellt am: {new Date(partner.partnerGuild.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Tags */}
+                  {partner.tags && partner.tags.length > 0 && (
+                    <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-2">
+                      <div className="flex items-center text-xs text-neutral-400">
+                        <Icons.Tag className={iconVariants({ variant: "small" })} />
+                        <span className="ml-1 font-medium">Tags:</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {partner.tags.map((tag, index) => (
+                          <span key={index} className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Public Link */}
+                  {partner.publicLink && (
+                    <div className="mt-2 rounded-md border border-neutral-800 bg-neutral-900/50 p-2">
+                      <div className="flex items-center text-xs text-neutral-400">
+                        <Icons.Link className={iconVariants({ variant: "small" })} />
+                        <span className="ml-1 font-medium">Public Link:</span>
+                      </div>
+                      <a 
+                        href={partner.publicLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mt-1 block text-sm text-blue-400 hover:underline"
+                      >
+                        {partner.publicLink}
+                      </a>
                     </div>
                   )}
                 </div>
@@ -440,6 +568,28 @@ export const PartnerList = ({
                 value={newPartner.notes}
                 onChange={(e) => setNewPartner({ ...newPartner, notes: e.target.value })}
                 rows={3}
+              />
+            </div>
+            <div>
+              <label htmlFor="partner-tags" className="mb-1 block text-sm font-medium">
+                Tags
+              </label>
+              <Input
+                id="partner-tags"
+                type="text"
+                value={newPartner.tags.join(", ")}
+                onChange={(e) => setNewPartner({ ...newPartner, tags: e.target.value.split(", ") })}
+              />
+            </div>
+            <div>
+              <label htmlFor="partner-public-link" className="mb-1 block text-sm font-medium">
+                Public Link
+              </label>
+              <Input
+                id="partner-public-link"
+                type="text"
+                value={newPartner.publicLink}
+                onChange={(e) => setNewPartner({ ...newPartner, publicLink: e.target.value })}
               />
             </div>
             {showNotesInput && (

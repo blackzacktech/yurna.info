@@ -1,8 +1,7 @@
+import { Metadata } from "next";
 import { dashboardConfig } from "@yurna/config";
 import prismaClient from "@yurna/database";
 import { getGuild, getGuildPreview } from "@yurna/util/functions/guild";
-import { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import Balancer from "react-wrap-balancer";
 import { Leaderboard } from "@/app/dashboard/[server]/leaderboard/components/Leaderboard";
@@ -11,6 +10,8 @@ import Header, { headerVariants } from "@/components/ui/Headers";
 import Image from "@/components/ui/Image";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
+import { Icons } from "@/components/ui/Icons";
+import Link from "next/link";
 
 export async function generateMetadata({ params }: { params: Promise<{ server: string }> }): Promise<Metadata> {
  const { server } = await params;
@@ -219,6 +220,59 @@ export default async function Page(props: { params: Promise<{ server: string }> 
                 <h3 className="text-lg font-semibold">{partner.name}</h3>
                 {partner.description && (
                   <p className="mt-1 line-clamp-2 text-sm text-neutral-300">{partner.description}</p>
+                )}
+                
+                {/* Show extra information when bot is on the partner server */}
+                {partner.partnerGuildId && partner.partnerGuild && (
+                  <div className="mt-2 space-y-2 text-xs text-neutral-400">
+                    {/* Partnership date */}
+                    <div className="flex items-center gap-1">
+                      <Icons.Calendar className="h-3.5 w-3.5" />
+                      <span>Partner seit: {new Date(partner.partnershipDate).toLocaleDateString()}</span>
+                    </div>
+                    
+                    {/* Member count */}
+                    {partner.partnerGuild.memberCount && (
+                      <div className="flex items-center gap-1">
+                        <Icons.Users className="h-3.5 w-3.5" />
+                        <span>Mitglieder: {partner.partnerGuild.memberCount.toLocaleString()}</span>
+                      </div>
+                    )}
+                    
+                    {/* Server creation date */}
+                    {partner.partnerGuild.createdAt && (
+                      <div className="flex items-center gap-1">
+                        <Icons.Clock className="h-3.5 w-3.5" />
+                        <span>Erstellt am: {new Date(partner.partnerGuild.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                    
+                    {/* Partner server public link */}
+                    {partner.publicLink && (
+                      <div className="flex items-center gap-1">
+                        <Icons.ExternalLink className="h-3.5 w-3.5" />
+                        <a 
+                          href={partner.publicLink} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:underline"
+                        >
+                          Server Link
+                        </a>
+                      </div>
+                    )}
+                    
+                    {/* Tags */}
+                    {partner.tags && partner.tags.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {partner.tags.map((tag: string, index: number) => (
+                          <span key={index} className="rounded-md bg-neutral-800 px-1.5 py-0.5 text-xs">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

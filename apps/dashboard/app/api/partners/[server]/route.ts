@@ -1,6 +1,7 @@
 import prismaClient from "@yurna/database";
 import { getGuildFromMemberGuilds, getGuild } from "@yurna/util/functions/guild";
-import { getSession } from "lib/session";
+import { getServerSession } from "next-auth";
+import authOptions from "lib/authOptions";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -16,6 +17,8 @@ type GuildPartner = {
   partnerGuildId: string | null;
   partnershipDate: Date;
   notes: string | null;
+  tags: string[];
+  publicLink: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -24,8 +27,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { server: string } }
 ) {
-  const session = await getSession();
-  if (!session || !session.access_token) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -37,7 +40,7 @@ export async function GET(
 
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.access_token
+    session.accessToken
   );
   if (
     !serverMember ||
@@ -48,80 +51,36 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    const partners = await prismaClient.guildPartner.findMany({
-      where: {
-        guildId: serverDownload.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        partnerGuild: {
-          select: {
-            guildId: true,
-          },
-        },
-      },
-    });
-    
-    // Erweitere die Partner-Daten mit Server-Statistiken für Partner, die auch Yurna nutzen
-    const partnersWithStats = await Promise.all(
-      partners.map(async (partner: GuildPartner) => {
-        if (partner.partnerGuildId) {
-          try {
-            // Hole Mitgliederstatistiken für Partner-Gilden
-            const memberStats = await prismaClient.guildMessage.findFirst({
-              where: {
-                guildId: partner.partnerGuildId,
-              },
-              orderBy: {
-                date: 'desc'
-              }
-            });
-            
-            const userCount = memberStats ? memberStats.messages : 0;
-            
-            return {
-              ...partner,
-              partnerStats: {
-                hasYurna: true,
-                userCount,
-                partnershipDays: Math.floor((Date.now() - partner.partnershipDate.getTime()) / (1000 * 60 * 60 * 24))
-              }
-            };
-          } catch (error) {
-            console.error("Error fetching partner stats:", error);
-            return partner;
-          }
+  // Get partners with additional information about the partner guild if available
+  const partners = await prismaClient.guildPartner.findMany({
+    where: {
+      guildId: serverDownload.id,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    include: {
+      partnerGuild: {
+        select: {
+          guildId: true,
+          name: true,
+          memberCount: true,
+          createdAt: true,
+          icon: true
         }
-        
-        return {
-          ...partner,
-          partnerStats: {
-            hasYurna: false,
-            partnershipDays: Math.floor((Date.now() - partner.partnershipDate.getTime()) / (1000 * 60 * 60 * 24))
-          }
-        };
-      })
-    );
-    
-    return NextResponse.json(partnersWithStats);
-  } catch (error) {
-    console.error("Error fetching partners:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch partners" },
-      { status: 500 }
-    );
-  }
+      }
+    }
+  });
+
+  return NextResponse.json(partners);
 }
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { server: string } }
 ) {
-  const session = await getSession();
-  if (!session || !session.access_token) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -133,7 +92,7 @@ export async function POST(
 
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.access_token
+    session.accessToken
   );
   if (
     !serverMember ||
@@ -152,6 +111,8 @@ export async function POST(
     const posters = formData.get("posters") as File | null;
     const partnerGuildId = formData.get("partnerGuildId") ? (formData.get("partnerGuildId") as string) : null;
     const notes = formData.get("notes") ? (formData.get("notes") as string) : "";
+    const tags = formData.get("tags") as string;
+    const publicLink = formData.get("publicLink") as string;
 
     if (!name) {
       return NextResponse.json(
@@ -185,6 +146,8 @@ export async function POST(
         hasPosters: !!posters,
         partnerGuildId,
         notes,
+        tags: tags ? JSON.parse(tags) : [],
+        publicLink: publicLink || null,
       },
     });
 
