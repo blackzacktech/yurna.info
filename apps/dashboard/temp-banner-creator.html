@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Default Partner Banner Creator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    .container {
+      text-align: center;
+    }
+    #banner {
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      width: 1200px;
+      height: 600px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .title {
+      font-size: 60px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      font-size: 30px;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      font-size: 16px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="banner">
+      <div class="title">Partner Server</div>
+      <div class="subtitle">Default Banner</div>
+    </div>
+    <div class="controls">
+      <button id="download-btn">Download Banner</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('download-btn').addEventListener('click', function() {
+      const banner = document.getElementById('banner');
+      
+      // Use html2canvas to convert the div to an image
+      html2canvas(banner).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'default-partner-banner.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    });
+  </script>
+  
+  <!-- Include html2canvas library -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</body>
+</html>

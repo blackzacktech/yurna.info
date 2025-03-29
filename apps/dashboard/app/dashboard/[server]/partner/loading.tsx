@@ -21,13 +21,21 @@ export default function Loading() {
           Partner Servers
         </Header>
         <p className="mb-4 text-left">
-          <Skeleton className="h-5 w-full" />
-          <Skeleton className="mt-1 h-5 w-1/2" />
+          <Skeleton className="h-6 w-full" />
         </p>
-
         <div className="space-y-4">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+          {[1, 2, 3].map((i) => (
+            <Block key={i}>
+              <div className="flex justify-between">
+                <Skeleton className="h-6 w-40" />
+                <div className="flex space-x-2">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+              <Skeleton className="mt-2 h-20 w-full" />
+            </Block>
+          ))}
         </div>
       </Block>
     </>
