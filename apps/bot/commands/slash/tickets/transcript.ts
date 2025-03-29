@@ -1,12 +1,22 @@
-import { ChatInputCommandInteraction } from 'discord.js';
-import { Command } from '@yurna/types';
+import { ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-transcript',
-  description: 'Erstellt ein Transkript des aktuellen Tickets',
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel } = interaction;
-    if (!channel) return;
+export default {
+  data: {
+    name: 'ticket-transcript',
+    description: 'Erstellt ein Transcript des aktuellen Tickets'
+  },
+  
+  name: "ticket-transcript",
+  description: "🎫 Erstellt ein Transcript des aktuellen Tickets",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-transcript",
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
+    if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
     const ticketManager = client['tickets'];
@@ -28,38 +38,29 @@ const command: Command = {
       return;
     }
 
-    // Ticket-Daten abrufen
-    const ticket = await ticketManager.getTicket(ticketId, true);
-    if (!ticket) {
-      await interaction.reply({
-        content: 'Dieses Ticket konnte nicht gefunden werden.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    await interaction.deferReply();
-
     try {
-      // Archiver aus dem Ticket-Manager verwenden
-      const transcript = await ticketManager.archiver.createTranscript(channel, ticket);
+      // Anfrage für einen Transcript
+      await interaction.deferReply();
       
-      if (transcript && transcript.url) {
+      // Transcript erstellen
+      const transcriptUrl = await ticketManager.createTranscript(channel, ticketId);
+      
+      if (!transcriptUrl) {
         await interaction.editReply({
-          content: `Transkript erstellt: ${transcript.url}`
+          content: 'Es konnte kein Transcript erstellt werden.'
         });
-      } else {
-        await interaction.editReply({
-          content: 'Das Transkript konnte nicht erstellt werden.'
-        });
+        return;
       }
-    } catch (error) {
-      console.error('Fehler beim Erstellen des Transkripts:', error);
+      
       await interaction.editReply({
-        content: 'Beim Erstellen des Transkripts ist ein Fehler aufgetreten.'
+        content: `Transcript wurde erstellt: ${transcriptUrl}`
+      });
+    } catch (error) {
+      console.error('Fehler beim Erstellen des Transcripts:', error);
+      await interaction.reply({
+        content: 'Beim Erstellen des Transcripts ist ein Fehler aufgetreten.',
+        ephemeral: true
       });
     }
   }
 };
-
-export default command;

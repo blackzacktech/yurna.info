@@ -1,20 +1,29 @@
-import { ApplicationCommandOptionType, ChatInputCommandInteraction } from 'discord.js';
-import { Command } from '@yurna/types';
-import prismaClient from '@yurna/database';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-rename',
-  description: 'Benennt ein Ticket-Thema um',
+export default {
+  data: {
+    name: 'ticket-rename',
+    description: 'Benennt ein Ticket um'
+  },
+  
+  name: "ticket-rename",
+  description: " Benennt ein Ticket um",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-rename [name]",
   options: [
     {
-      name: 'topic',
-      description: 'Das neue Thema des Tickets',
+      name: 'name',
+      description: 'Der neue Name für das Ticket',
       type: ApplicationCommandOptionType.String,
       required: true
     }
   ],
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel, guild } = interaction;
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
     if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
@@ -37,38 +46,44 @@ const command: Command = {
       return;
     }
 
-    // Ticket-Daten abrufen
-    const ticket = await ticketManager.getTicket(ticketId, true);
-    if (!ticket || !ticket.open) {
+    // Neuen Namen abrufen
+    const newName = interaction.options.getString('name');
+    if (!newName) {
       await interaction.reply({
-        content: 'Dieses Ticket existiert nicht oder ist bereits geschlossen.',
+        content: 'Du musst einen gültigen Namen angeben.',
         ephemeral: true
       });
       return;
     }
 
-    // Neues Thema abrufen
-    const topic = interaction.options.getString('topic');
-    if (!topic) {
-      await interaction.reply({
-        content: 'Bitte gib ein gültiges Thema an.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    // Ticket aktualisieren
     try {
-      await prismaClient.ticket.update({
-        where: { id: ticketId },
-        data: { topic }
-      });
-
-      // Kanal-Thema aktualisieren
-      await channel.setTopic(`${ticket.createdBy.tag}: ${topic}`);
+      // Ticket umbenennen
+      await ticketManager.updateTicket(ticketId, { topic: newName });
+      
+      // Optional: Auch den Kanal umbenennen
+      try {
+        if (channel.isTextBased() && 'setName' in channel) {
+          // Ticket-Nummer beibehalten, wenn vorhanden
+          const currentName = channel.name;
+          const ticketNumberMatch = currentName.match(/^ticket-(\d+)/i);
+          
+          if (ticketNumberMatch) {
+            const ticketNumber = ticketNumberMatch[1];
+            const sanitizedName = newName.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 90);
+            await channel.setName(`ticket-${ticketNumber}-${sanitizedName}`);
+          } else {
+            const sanitizedName = newName.toLowerCase().replace(/[^a-z0-9-]/g, '-').substring(0, 95);
+            await channel.setName(`ticket-${sanitizedName}`);
+          }
+        }
+      } catch (err) {
+        console.error('Fehler beim Umbenennen des Kanals:', err);
+        // Wir ignorieren Fehler beim Umbenennen des Kanals, 
+        // da das Ticket selbst bereits umbenannt wurde
+      }
 
       await interaction.reply({
-        content: `Das Thema des Tickets wurde zu **${topic}** geändert.`
+        content: `Das Ticket wurde zu **${newName}** umbenannt.`
       });
     } catch (error) {
       console.error('Fehler beim Umbenennen des Tickets:', error);
@@ -79,5 +94,3 @@ const command: Command = {
     }
   }
 };
-
-export default command;

@@ -1,9 +1,18 @@
-import { ApplicationCommandOptionType, ChatInputCommandInteraction } from 'discord.js';
-import { Command } from '@yurna/types';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-remove',
-  description: 'Entfernt einen Benutzer aus einem Ticket',
+export default {
+  data: {
+    name: 'ticket-remove',
+    description: 'Entfernt einen Benutzer aus einem Ticket'
+  },
+  
+  name: "ticket-remove",
+  description: "🎫 Entfernt einen Benutzer aus einem Ticket",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-remove [user]",
   options: [
     {
       name: 'user',
@@ -12,8 +21,9 @@ const command: Command = {
       required: true
     }
   ],
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel, guild } = interaction;
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
     if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
@@ -36,30 +46,11 @@ const command: Command = {
       return;
     }
 
-    // Ticket-Daten abrufen
-    const ticket = await ticketManager.getTicket(ticketId, true);
-    if (!ticket) {
-      await interaction.reply({
-        content: 'Dieses Ticket konnte nicht gefunden werden.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    // Zu entfernenden Benutzer abrufen
+    // Zu entfernende Person abrufen
     const user = interaction.options.getUser('user');
     if (!user) {
       await interaction.reply({
         content: 'Der angegebene Benutzer wurde nicht gefunden.',
-        ephemeral: true
-      });
-      return;
-    }
-
-    // Prüfen, ob der Benutzer der Ticket-Ersteller ist
-    if (user.id === ticket.createdById) {
-      await interaction.reply({
-        content: 'Der Ticket-Ersteller kann nicht aus dem Ticket entfernt werden.',
         ephemeral: true
       });
       return;
@@ -91,5 +82,3 @@ const command: Command = {
     }
   }
 };
-
-export default command;

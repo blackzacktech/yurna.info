@@ -1,11 +1,18 @@
-import { ApplicationCommandOptionType, ChatInputCommandInteraction } from 'discord.js';
-import { Command } from '@yurna/types';
-import { TicketPriority } from '@prisma/client';
-import prismaClient from '@yurna/database';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-priority',
-  description: 'Ändert die Priorität eines Tickets',
+export default {
+  data: {
+    name: 'ticket-priority',
+    description: 'Ändert die Priorität eines Tickets'
+  },
+  
+  name: "ticket-priority",
+  description: " Ändert die Priorität eines Tickets",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-priority [priority]",
   options: [
     {
       name: 'priority',
@@ -14,14 +21,15 @@ const command: Command = {
       required: true,
       choices: [
         { name: 'Niedrig', value: 'LOW' },
-        { name: 'Normal', value: 'NORMAL' },
+        { name: 'Mittel', value: 'MEDIUM' },
         { name: 'Hoch', value: 'HIGH' },
-        { name: 'Dringend', value: 'URGENT' }
+        { name: 'Kritisch', value: 'CRITICAL' }
       ]
     }
   ],
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel, guild } = interaction;
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
     if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
@@ -44,39 +52,29 @@ const command: Command = {
       return;
     }
 
-    // Ticket-Daten abrufen
-    const ticket = await ticketManager.getTicket(ticketId, true);
-    if (!ticket || !ticket.open) {
+    // Neue Priorität abrufen
+    const newPriority = interaction.options.getString('priority');
+    if (!newPriority) {
       await interaction.reply({
-        content: 'Dieses Ticket existiert nicht oder ist bereits geschlossen.',
+        content: 'Du musst eine gültige Priorität angeben.',
         ephemeral: true
       });
       return;
     }
 
-    // Neue Priorität abrufen
-    const priority = interaction.options.getString('priority') as TicketPriority;
-
-    // Ticket aktualisieren
     try {
-      await prismaClient.ticket.update({
-        where: { id: ticketId },
-        data: { priority }
-      });
+      // Priorität im Ticket aktualisieren
+      await ticketManager.updateTicket(ticketId, { priority: newPriority });
 
-      // Kanal-Name aktualisieren, wenn gewünscht
-      // Hier könnte man z.B. ein Emoji für die Priorität hinzufügen
-
-      // Bestätigung senden
-      const priorityLabels = {
+      const priorityLabels: Record<string, string> = {
         LOW: 'Niedrig',
-        NORMAL: 'Normal',
+        MEDIUM: 'Mittel',
         HIGH: 'Hoch',
-        URGENT: 'Dringend'
+        CRITICAL: 'Kritisch'
       };
 
       await interaction.reply({
-        content: `Die Priorität dieses Tickets wurde auf **${priorityLabels[priority]}** gesetzt.`
+        content: `Die Priorität des Tickets wurde auf **${priorityLabels[newPriority]}** gesetzt.`
       });
     } catch (error) {
       console.error('Fehler beim Ändern der Ticket-Priorität:', error);
@@ -87,5 +85,3 @@ const command: Command = {
     }
   }
 };
-
-export default command;

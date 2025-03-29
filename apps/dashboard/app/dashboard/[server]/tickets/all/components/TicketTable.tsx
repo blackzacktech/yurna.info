@@ -1,106 +1,126 @@
-import { FC } from 'react';
-import { Table, SimpleTableHeader } from "@/components/ui/Table";
-import { Badge } from "@/components/ui/Badge";
-import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
-import Link from 'next/link';
-import { Button } from '@/components/ui/Buttons';
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+"use client";
+
+import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
+import { Table } from '@/components/ui/Table';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { MoreHorizontal, Eye, Clock, X, CheckCircle2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/DropdownMenu';
+import { SimpleTableHeader } from '@/components/ui/SimpleTableHeader';
+import Link from 'next/link';
+import { format } from 'date-fns';
 
-// Define interfaces that match your Prisma schema
-interface TicketCategory {
-  id: number;
-  name: string;
-  emoji: string;
-  description: string;
-}
+// Neue Komponenten für Zellen definieren
+const NumberCell = ({ value }: { value: number }) => (
+  <span className="font-medium">#{value}</span>
+);
 
-interface User {
-  id: string;
-  username: string;
-}
+const TopicCell = ({ value }: { value: string | null }) => (
+  <span className="truncate max-w-[200px] block">
+    {value || <span className="text-muted-foreground italic">Kein Thema</span>}
+  </span>
+);
 
+const CreatedByCell = ({ ticket }: { ticket: any }) => (
+  <div className="flex items-center gap-2">
+    {ticket.createdBy && (
+      <>
+        {ticket.createdBy.avatar && (
+          <img 
+            src={ticket.createdBy.avatar} 
+            alt={ticket.createdBy.username} 
+            className="w-6 h-6 rounded-full"
+          />
+        )}
+        <span>{ticket.createdBy.username}</span>
+      </>
+    )}
+  </div>
+);
+
+const StatusCell = ({ value }: { value: boolean }) => (
+  <Badge variant={value ? "success" : "destructive"}>
+    {value ? (
+      <span className="flex items-center gap-1">
+        <Clock className="w-3 h-3" /> Offen
+      </span>
+    ) : (
+      <span className="flex items-center gap-1">
+        <X className="w-3 h-3" /> Geschlossen
+      </span>
+    )}
+  </Badge>
+);
+
+const ClaimedByCell = ({ ticket }: { ticket: any }) => (
+  <div>
+    {ticket.claimedBy ? (
+      <Badge variant="outline" className="flex items-center gap-1">
+        <CheckCircle2 className="w-3 h-3" />
+        {ticket.claimedBy.username}
+      </Badge>
+    ) : (
+      <Badge variant="outline" className="text-muted-foreground">Nicht beansprucht</Badge>
+    )}
+  </div>
+);
+
+const CategoryCell = ({ ticket }: { ticket: any }) => (
+  <Badge variant="secondary">{ticket.category?.name || 'Unbekannt'}</Badge>
+);
+
+const ActionsCell = ({ ticket, serverId }: { ticket: any, serverId: string }) => (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <MoreHorizontal className="w-4 h-4" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent align="end">
+      <DropdownMenuItem asChild>
+        <Link href={`/dashboard/${serverId}/tickets/${ticket.id}`}>
+          <Eye className="mr-2 w-4 h-4" /> Details anzeigen
+        </Link>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+);
+
+// Erweitere den TicketWithRelations Typ
 interface TicketWithRelations {
   id: string;
   number: number;
   topic: string | null;
-  category: TicketCategory | null;
-  createdBy: User;
-  createdAt: Date;
   open: boolean;
-  deleted: boolean;
-  claimedById: string | null;
+  createdBy: {
+    id: string;
+    username: string;
+    avatar?: string;
+  } | null;
+  claimedBy: {
+    id: string;
+    username: string;
+    avatar?: string;
+  } | null;
+  category: {
+    id: number;
+    name: string;
+  } | null;
+  createdAt: string;
 }
 
 interface TicketTableProps {
   tickets: TicketWithRelations[];
-  currentPage: number;
-  totalPages: number;
   serverId: string;
-  tab: string;
 }
 
-// Define header rendering component separately
-const NumberCell = ({ value }: { value: number }) => {
-  return <div className="font-medium">#{value}</div>;
-};
-
-const TopicCell = ({ value }: { value: string | null }) => {
-  return value ? <div>{value}</div> : <div className="text-muted-foreground">Kein Thema angegeben</div>;
-};
-
-const CategoryCell = ({ category }: { category: TicketCategory | null }) => {
-  return category ? 
-    <div>{category.emoji} {category.name}</div> : 
-    <div className="text-muted-foreground">Keine Kategorie</div>;
-};
-
-const StatusCell = ({ ticket }: { ticket: TicketWithRelations }) => {
-  return (
-    <div className="flex items-center gap-2">
-      {ticket.deleted ? (
-        <Badge variant="destructive">Geschlossen</Badge>
-      ) : ticket.open ? (
-        <Badge variant="default">Offen</Badge>
-      ) : (
-        <Badge variant="secondary">Wartend</Badge>
-      )}
-      
-      {ticket.claimedById && (
-        <Badge variant="outline">Beansprucht</Badge>
-      )}
-    </div>
-  );
-};
-
-const UserCell = ({ username }: { username: string }) => {
-  return <div>{username}</div>;
-};
-
-const DateCell = ({ date }: { date: Date }) => {
-  return <div>{format(new Date(date), 'dd.MM.yyyy HH:mm', { locale: de })}</div>;
-};
-
-const ActionCell = ({ ticketId, serverId }: { ticketId: string, serverId: string }) => {
-  return (
-    <div className="text-right">
-      <Button variant="secondary" asChild>
-        <Link href={`/dashboard/${serverId}/tickets/${ticketId}`}>
-          <ExternalLink className="h-4 w-4" />
-        </Link>
-      </Button>
-    </div>
-  );
-};
-
-const TicketTable: FC<TicketTableProps> = ({ 
-  tickets, 
-  currentPage, 
-  totalPages, 
-  serverId,
-  tab
-}) => {
+export function TicketTable({ tickets, serverId }: TicketTableProps) {
   const columns: ColumnDef<TicketWithRelations>[] = [
     {
       accessorKey: 'number',
@@ -113,69 +133,34 @@ const TicketTable: FC<TicketTableProps> = ({
       cell: ({ row }) => <TopicCell value={row.getValue('topic')} />,
     },
     {
-      accessorKey: 'category',
-      header: () => <SimpleTableHeader title="Kategorie" />,
-      cell: ({ row }) => <CategoryCell category={row.original.category} />,
+      accessorKey: 'createdBy',
+      header: () => <SimpleTableHeader title="Erstellt von" />,
+      cell: ({ row }) => <CreatedByCell ticket={row.original} />,
     },
     {
       accessorKey: 'status',
       header: () => <SimpleTableHeader title="Status" />,
-      cell: ({ row }) => <StatusCell ticket={row.original} />,
+      cell: ({ row }) => <StatusCell value={row.original.open} />,
     },
     {
-      accessorKey: 'createdBy',
-      header: () => <SimpleTableHeader title="Erstellt von" />,
-      cell: ({ row }) => <UserCell username={row.original.createdBy.username} />,
+      accessorKey: 'claimedBy',
+      header: () => <SimpleTableHeader title="Bearbeiter" />,
+      cell: ({ row }) => <ClaimedByCell ticket={row.original} />,
     },
     {
-      accessorKey: 'createdAt',
-      header: () => <SimpleTableHeader title="Erstellt am" />,
-      cell: ({ row }) => <DateCell date={row.original.createdAt} />,
+      accessorKey: 'category',
+      header: () => <SimpleTableHeader title="Kategorie" />,
+      cell: ({ row }) => <CategoryCell ticket={row.original} />,
     },
     {
       id: 'actions',
-      cell: ({ row }) => <ActionCell ticketId={row.original.id} serverId={serverId} />,
+      cell: ({ row }) => <ActionsCell ticket={row.original} serverId={serverId} />,
     },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="rounded-md border">
       <Table columns={columns} data={tickets} />
-
-      {/* Paginierung */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center space-x-2 py-4">
-          <Button
-            variant="secondary"
-            disabled={currentPage <= 1}
-            asChild
-          >
-            <Link
-              href={`/dashboard/${serverId}/tickets/all?tab=${tab}&page=${currentPage - 1}`}
-              aria-label="Vorherige Seite"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Seite {currentPage} von {totalPages}
-          </span>
-          <Button
-            variant="secondary"
-            disabled={currentPage >= totalPages}
-            asChild
-          >
-            <Link
-              href={`/dashboard/${serverId}/tickets/all?tab=${tab}&page=${currentPage + 1}`}
-              aria-label="Nächste Seite"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-      )}
     </div>
   );
-};
-
-export default TicketTable;
+}

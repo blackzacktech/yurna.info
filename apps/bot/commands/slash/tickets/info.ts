@@ -1,14 +1,22 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
-import { Command } from '@yurna/types';
-import { formatDistanceToNow } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { ChatInputCommandInteraction, Client, EmbedBuilder, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-info',
-  description: 'Zeigt Informationen über das aktuelle Ticket an',
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel } = interaction;
-    if (!channel) return;
+export default {
+  data: {
+    name: 'ticket-info',
+    description: 'Zeigt Informationen zum aktuellen Ticket an'
+  },
+  
+  name: "ticket-info",
+  description: " Zeigt Informationen zum aktuellen Ticket an",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-info",
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
+    if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
     const ticketManager = client['tickets'];
@@ -30,59 +38,52 @@ const command: Command = {
       return;
     }
 
-    // Ticket-Daten abrufen
-    const ticket = await ticketManager.getTicket(ticketId, true);
-    if (!ticket) {
+    try {
+      // Ticket-Daten abrufen
+      const ticket = await ticketManager.getTicket(ticketId, true);
+      
+      if (!ticket) {
+        await interaction.reply({
+          content: 'Dieses Ticket konnte nicht gefunden werden.',
+          ephemeral: true
+        });
+        return;
+      }
+
+      // Prioritätsname ermitteln
+      const priorityLabels: Record<string, string> = {
+        LOW: 'Niedrig',
+        MEDIUM: 'Mittel',
+        HIGH: 'Hoch',
+        CRITICAL: 'Kritisch'
+      };
+      
+      const priorityName = priorityLabels[ticket.priority] || 'Unbekannt';
+
+      // Informationen in einem Embed anzeigen
+      const embed = new EmbedBuilder()
+        .setTitle(`Ticket #${ticket.number}: ${ticket.topic}`)
+        .setColor(0x3498db)
+        .addFields(
+          { name: 'Erstellt von', value: `<@${ticket.createdById}>`, inline: true },
+          { name: 'Erstellt am', value: new Date(ticket.createdAt).toLocaleString('de-DE'), inline: true },
+          { name: 'Status', value: ticket.open ? ' Offen' : ' Geschlossen', inline: true },
+          { name: 'Priorität', value: priorityName, inline: true },
+          { name: 'Kategorie', value: ticket.category?.name || 'Keine Kategorie', inline: true }
+        );
+
+      // Zugewiesene Personen, falls vorhanden
+      if (ticket.assignedTo) {
+        embed.addFields({ name: 'Zugewiesen an', value: `<@${ticket.assignedTo}>`, inline: true });
+      }
+
+      await interaction.reply({ embeds: [embed] });
+    } catch (error) {
+      console.error('Fehler beim Abrufen der Ticket-Informationen:', error);
       await interaction.reply({
-        content: 'Dieses Ticket konnte nicht gefunden werden.',
+        content: 'Beim Abrufen der Ticket-Informationen ist ein Fehler aufgetreten.',
         ephemeral: true
       });
-      return;
     }
-
-    // Prioritäts-Labels und -Farben
-    const priorityData = {
-      LOW: { label: 'Niedrig', color: 0x3498db },
-      NORMAL: { label: 'Normal', color: 0x2ecc71 },
-      HIGH: { label: 'Hoch', color: 0xf39c12 },
-      URGENT: { label: 'Dringend', color: 0xe74c3c }
-    };
-
-    // Informations-Embed erstellen
-    const embed = new EmbedBuilder()
-      .setTitle(`Ticket #${ticket.number}`)
-      .setColor(priorityData[ticket.priority]?.color || 0x7289da)
-      .addFields(
-        { name: 'Status', value: ticket.open ? '🟢 Offen' : '🔴 Geschlossen', inline: true },
-        { name: 'Kategorie', value: ticket.category?.name || 'Unbekannt', inline: true },
-        { name: 'Priorität', value: priorityData[ticket.priority]?.label || 'Normal', inline: true },
-        { name: 'Erstellt von', value: `<@${ticket.createdById}>`, inline: true },
-        { name: 'Erstellt vor', value: formatDistanceToNow(ticket.createdAt, { locale: de, addSuffix: true }), inline: true }
-      );
-
-    // Zusätzliche Felder, wenn vorhanden
-    if (ticket.claimedById) {
-      embed.addFields({ name: 'Beansprucht von', value: `<@${ticket.claimedById}>`, inline: true });
-    }
-
-    if (ticket.topic) {
-      embed.addFields({ name: 'Thema', value: ticket.topic });
-    }
-
-    // Antworten auf Fragen hinzufügen, falls vorhanden
-    if (ticket.answers && ticket.answers.length > 0) {
-      const answerFields = ticket.answers.map(answer => {
-        return {
-          name: answer.question?.label || 'Frage',
-          value: answer.value || 'Keine Antwort'
-        };
-      });
-
-      embed.addFields(...answerFields.slice(0, 10)); // Maximal 10 Antworten anzeigen
-    }
-
-    await interaction.reply({ embeds: [embed] });
   }
 };
-
-export default command;

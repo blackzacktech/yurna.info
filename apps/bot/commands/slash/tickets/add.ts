@@ -1,9 +1,18 @@
-import { ApplicationCommandOptionType, ChatInputCommandInteraction } from 'discord.js';
-import { Command } from '@yurna/types';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-add',
-  description: 'Fügt einen Benutzer zu einem Ticket hinzu',
+export default {
+  data: {
+    name: 'ticket-add',
+    description: 'Fügt einen Benutzer zu einem Ticket hinzu'
+  },
+  
+  name: "ticket-add",
+  description: "🎫 Fügt einen Benutzer zu einem Ticket hinzu",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-add [user]",
   options: [
     {
       name: 'user',
@@ -12,8 +21,9 @@ const command: Command = {
       required: true
     }
   ],
-  async execute(interaction: ChatInputCommandInteraction) {
-    const { client, channel, guild } = interaction;
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
+    const { channel, guild } = interaction;
     if (!channel || !guild) return;
 
     // Ticket-Manager aus dem Client holen
@@ -75,5 +85,3 @@ const command: Command = {
     }
   }
 };
-
-export default command;

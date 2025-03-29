@@ -1,155 +1,99 @@
-import { ApplicationCommandOptionType, ChatInputCommandInteraction, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { Command } from '@yurna/types';
-import prismaClient from '@yurna/database';
+import { ApplicationCommandOptionType, ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType, ChannelType } from 'discord.js';
 
-const command: Command = {
-  name: 'ticket-panel',
-  description: 'Erstellt ein Ticket-Panel zum Öffnen neuer Tickets',
+export default {
+  data: {
+    name: 'ticket-panel',
+    description: 'Erstellt ein Ticket-Panel in einem Kanal'
+  },
+  
+  name: "ticket-panel",
+  description: " Erstellt ein Ticket-Panel in einem Kanal",
+  type: ApplicationCommandType.ChatInput,
+  cooldown: 3000,
+  contexts: [InteractionContextType.Guild],
+  integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall],
+  usage: "/ticket-panel [category] [channel]",
   options: [
     {
-      name: 'title',
-      description: 'Der Titel des Panels',
-      type: ApplicationCommandOptionType.String,
-      required: true
-    },
-    {
-      name: 'description',
-      description: 'Die Beschreibung des Panels',
-      type: ApplicationCommandOptionType.String,
-      required: true
-    },
-    {
       name: 'category',
-      description: 'Die ID der Ticket-Kategorie (optional, zeigt sonst alle Kategorien an)',
-      type: ApplicationCommandOptionType.Integer,
-      required: false
+      description: 'Die Ticket-Kategorie, für die ein Panel erstellt werden soll',
+      type: ApplicationCommandOptionType.String,
+      required: true
     },
     {
-      name: 'color',
-      description: 'Die Farbe des Panels als Hex-Code (z.B. #7289DA)',
-      type: ApplicationCommandOptionType.String,
-      required: false
+      name: 'channel',
+      description: 'Der Kanal, in dem das Panel erstellt werden soll (Standard: aktueller Kanal)',
+      type: ApplicationCommandOptionType.Channel,
+      required: false,
+      channelTypes: [ChannelType.GuildText]
     }
   ],
-  async execute(interaction: ChatInputCommandInteraction) {
+
+  async execute(interaction: ChatInputCommandInteraction, client: Client) {
     const { guild } = interaction;
     if (!guild) return;
 
-    // Serveradministrator-Berechtigungen prüfen
-    if (!interaction.memberPermissions?.has('Administrator')) {
+    // Ticket-Manager aus dem Client holen
+    const ticketManager = client['tickets'];
+    if (!ticketManager) {
       await interaction.reply({
-        content: 'Du benötigst Administrator-Berechtigungen, um Ticket-Panels zu erstellen.',
+        content: 'Das Ticket-System ist derzeit nicht verfügbar.',
         ephemeral: true
       });
       return;
     }
 
-    // Panel-Daten aus den Optionen abrufen
-    const title = interaction.options.getString('title');
-    const description = interaction.options.getString('description');
-    const categoryId = interaction.options.getInteger('category');
-    const colorString = interaction.options.getString('color') || '#7289DA';
-    
-    // Farbe parsen
-    let color;
-    try {
-      color = parseInt(colorString.replace('#', ''), 16);
-    } catch {
-      color = 0x7289DA; // Discord-Blau als Fallback
+    // Kategorie-ID oder -Name abrufen
+    const categoryIdOrName = interaction.options.getString('category');
+    if (!categoryIdOrName) {
+      await interaction.reply({
+        content: 'Du musst eine gültige Kategorie angeben.',
+        ephemeral: true
+      });
+      return;
     }
 
-    // Wenn eine spezifische Kategorie angegeben wurde, diese abrufen
-    if (categoryId) {
-      const category = await prismaClient.ticketCategory.findUnique({
-        where: { 
-          id: categoryId,
-          guildId: guild.id
-        }
+    // Zielkanal bestimmen (aktueller Kanal, wenn nicht angegeben)
+    const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
+    if (!targetChannel || !targetChannel.isTextBased() || targetChannel.isDMBased()) {
+      await interaction.reply({
+        content: 'Der angegebene Kanal ist kein gültiger Textkanal.',
+        ephemeral: true
       });
+      return;
+    }
 
+    try {
+      // Panel erstellen
+      await interaction.deferReply({ ephemeral: true });
+      
+      // Kategorie abrufen (ob es sich um eine ID oder einen Namen handelt)
+      const category = await ticketManager.getCategory(guild.id, categoryIdOrName);
+      
       if (!category) {
-        await interaction.reply({
-          content: `Die Ticket-Kategorie mit der ID ${categoryId} existiert nicht.`,
-          ephemeral: true
+        await interaction.editReply({
+          content: `Die Kategorie "${categoryIdOrName}" wurde nicht gefunden.`
         });
         return;
       }
-
-      // Panel mit nur einem Button für diese Kategorie erstellen
-      const embed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(color)
-        .setFooter({ text: `Ticket-Kategorie: ${category.name}` });
-
-      const button = new ButtonBuilder()
-        .setCustomId(`ticket:create:${category.id}`)
-        .setLabel(`Ticket in ${category.name} erstellen`)
-        .setStyle(ButtonStyle.Primary)
-        .setEmoji('🎫');
-
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
-
-      await interaction.reply({
-        content: 'Ticket-Panel wird erstellt...',
-        ephemeral: true
-      });
-
-      await interaction.channel?.send({
-        embeds: [embed],
-        components: [row]
-      });
-    } else {
-      // Alle aktiven Kategorien für diese Guild abrufen
-      const categories = await prismaClient.ticketCategory.findMany({
-        where: {
-          guildId: guild.id,
-          active: true
-        },
-        orderBy: {
-          name: 'asc'
-        },
-        take: 5 // Maximal 5 Kategorien, da Discord maximal 5 Buttons pro Zeile erlaubt
-      });
-
-      if (categories.length === 0) {
-        await interaction.reply({
-          content: 'Es sind keine aktiven Ticket-Kategorien vorhanden. Erstelle zuerst Kategorien über das Dashboard.',
-          ephemeral: true
+      
+      // Panel erstellen
+      const success = await ticketManager.createPanel(targetChannel, category.id);
+      
+      if (success) {
+        await interaction.editReply({
+          content: `Ticket-Panel für Kategorie "${category.name}" wurde in <#${targetChannel.id}> erstellt.`
         });
-        return;
+      } else {
+        await interaction.editReply({
+          content: 'Es gab ein Problem beim Erstellen des Ticket-Panels.'
+        });
       }
-
-      // Panel mit Buttons für alle Kategorien erstellen
-      const embed = new EmbedBuilder()
-        .setTitle(title)
-        .setDescription(description)
-        .setColor(color)
-        .setFooter({ text: `Verfügbare Kategorien: ${categories.map(c => c.name).join(', ')}` });
-
-      const row = new ActionRowBuilder<ButtonBuilder>();
-
-      for (const category of categories) {
-        const button = new ButtonBuilder()
-          .setCustomId(`ticket:create:${category.id}`)
-          .setLabel(category.name)
-          .setStyle(ButtonStyle.Primary)
-          .setEmoji('🎫');
-
-        row.addComponents(button);
-      }
-
-      await interaction.reply({
-        content: 'Ticket-Panel wird erstellt...',
-        ephemeral: true
-      });
-
-      await interaction.channel?.send({
-        embeds: [embed],
-        components: [row]
+    } catch (error) {
+      console.error('Fehler beim Erstellen des Ticket-Panels:', error);
+      await interaction.editReply({
+        content: 'Beim Erstellen des Ticket-Panels ist ein Fehler aufgetreten.'
       });
     }
   }
 };
-
-export default command;
