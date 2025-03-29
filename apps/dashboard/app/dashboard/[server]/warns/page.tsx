@@ -26,8 +26,8 @@ export default async function Page(props: { params: Promise<{ server: string }> 
   // prettier
   !serverMember ||
   !serverMember.permissions_names ||
-  !serverMember.permissions_names.includes("ManageGuild") ||
-  !serverMember.permissions_names.includes("Administrator")
+  (!serverMember.permissions_names.includes("ManageGuild") && 
+   !serverMember.permissions_names.includes("Administrator"))
  )
   return notFound();
 

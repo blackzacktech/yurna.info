@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
   const serverMember = await getGuildFromMemberGuilds(server.id, session.access_token);
 
-  if (!serverMember || !serverMember.permissions_names || !serverMember.permissions_names.includes("ManageGuild") || !serverMember.permissions_names.includes("Administrator")) {
+  if (!serverMember || !serverMember.permissions_names || (!serverMember.permissions_names.includes("ManageGuild") && !serverMember.permissions_names.includes("Administrator"))) {
    return NextResponse.json(
     {
      error: "Unauthorized - you need to log in first",
@@ -275,7 +275,7 @@ export async function PUT(request: NextRequest) {
 
   const serverMember = await getGuildFromMemberGuilds(server.id, session.access_token);
 
-  if (!serverMember || !serverMember.permissions_names || !serverMember.permissions_names.includes("ManageGuild") || !serverMember.permissions_names.includes("Administrator")) {
+  if (!serverMember || !serverMember.permissions_names || (!serverMember.permissions_names.includes("ManageGuild") && !serverMember.permissions_names.includes("Administrator"))) {
    return NextResponse.json(
     {
      error: "Unauthorized - you need to log in first",
@@ -368,3 +368,4 @@ export async function PUT(request: NextRequest) {
   );
  }
 }
+
