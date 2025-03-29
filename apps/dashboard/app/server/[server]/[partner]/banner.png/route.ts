@@ -35,13 +35,13 @@ export async function GET(
       "banner.png"
     );
 
-    // Path to the default banner
+    // Path to the default banner - Fixed the path to where default banner actually exists
     const defaultBannerPath = path.join(
       process.cwd(),
       "public",
-      "assets",
-      "images",
-      "default-partner-banner.png"
+      "server",
+      "default",
+      "banner.png"
     );
 
     // Check if custom banner exists
