@@ -120,12 +120,17 @@ const authOptions = {
    }
   },
   session({ session, token }) {
-   token.avatar = `${process.env.NEXTAUTH_URL}/api/user/avatar/${token.id}`;
+    token.avatar = `${process.env.NEXTAUTH_URL}/api/user/avatar/${token.id}`;
 
-   return {
-    ...token,
-    ...session,
-   };
+    return {
+      ...session,
+      ...token,
+      accessToken: token.access_token,
+      user: {
+        ...session.user,
+        id: token.id,
+      }
+    };
   },
  },
 } satisfies AuthOptions;

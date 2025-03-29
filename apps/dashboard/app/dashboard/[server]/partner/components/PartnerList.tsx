@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, buttonVariants } from "@/components/ui/Buttons";
 import { Block } from "@/components/ui/Block";
 import { Icons, iconVariants } from "@/components/ui/Icons";
@@ -8,6 +8,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useToast } from "@/components/ui/use-toast";
 
 // Erweiterte Typdefinition für Partner mit Stats
 type GuildPartner = {
@@ -92,6 +93,137 @@ export const PartnerList = ({
   const [editSelectedPosterFile, setEditSelectedPosterFile] = useState<File | null>(null);
   const [noteInput, setNoteInput] = useState("");
   const [editNoteInput, setEditNoteInput] = useState("");
+
+  // Initialize the toast component
+  const { toast } = useToast();
+
+  // Function to copy image URL to clipboard
+  const copyImageUrlToClipboard = (partnerId: string, type: "banner" | "poster") => {
+    const baseUrl = window.location.origin;
+    const imageUrl = `${baseUrl}/api/partners/${serverId}/${partnerId}/${type}.png`;
+    
+    navigator.clipboard.writeText(imageUrl)
+      .then(() => {
+        toast({
+          title: "URL kopiert!",
+          description: `Die Bild-URL wurde in die Zwischenablage kopiert.`,
+          variant: "default",
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to copy URL:", error);
+        toast({
+          title: "Fehler",
+          description: "Die URL konnte nicht kopiert werden.",
+          variant: "destructive",
+        });
+      });
+  };
+  
+  // Image preview URLs for new partner
+  const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null);
+  const [posterPreviewUrl, setPosterPreviewUrl] = useState<string | null>(null);
+  
+  // Image preview URLs for edit partner
+  const [editBannerPreviewUrl, setEditBannerPreviewUrl] = useState<string | null>(null);
+  const [editPosterPreviewUrl, setEditPosterPreviewUrl] = useState<string | null>(null);
+  
+  // Handle file selection for new partner banner
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create a preview URL for the selected file
+      const objectUrl = URL.createObjectURL(file);
+      setBannerPreviewUrl(objectUrl);
+      
+      // Clean up previous preview URL
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
+  
+  // Handle file selection for new partner poster
+  const handlePosterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedPosterFile(file);
+      
+      // Create a preview URL for the selected file
+      const objectUrl = URL.createObjectURL(file);
+      setPosterPreviewUrl(objectUrl);
+      
+      // Clean up previous preview URL
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
+  
+  // Handle file selection for edit partner banner
+  const handleEditBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditSelectedFile(file);
+      
+      // Create a preview URL for the selected file
+      const objectUrl = URL.createObjectURL(file);
+      setEditBannerPreviewUrl(objectUrl);
+      
+      // Clean up previous preview URL
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
+  
+  // Handle file selection for edit partner poster
+  const handleEditPosterFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditSelectedPosterFile(file);
+      
+      // Create a preview URL for the selected file
+      const objectUrl = URL.createObjectURL(file);
+      setEditPosterPreviewUrl(objectUrl);
+      
+      // Clean up previous preview URL
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+  };
+  
+  // Set edit preview URLs when a partner is selected for editing
+  useEffect(() => {
+    if (editingPartnerId) {
+      const partner = partners.find(p => p.id === editingPartnerId);
+      if (partner) {
+        if (partner.hasBanner) {
+          setEditBannerPreviewUrl(`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`);
+        } else {
+          setEditBannerPreviewUrl(null);
+        }
+        
+        if (partner.hasPosters) {
+          setEditPosterPreviewUrl(`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`);
+        } else {
+          setEditPosterPreviewUrl(null);
+        }
+      }
+    } else {
+      setEditBannerPreviewUrl(null);
+      setEditPosterPreviewUrl(null);
+    }
+  }, [editingPartnerId, partners, serverId]);
+  
+  // Clean up preview URLs when component unmounts
+  useEffect(() => {
+    return () => {
+      if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl);
+      if (posterPreviewUrl) URL.revokeObjectURL(posterPreviewUrl);
+      if (editBannerPreviewUrl && editBannerPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(editBannerPreviewUrl);
+      }
+      if (editPosterPreviewUrl && editPosterPreviewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(editPosterPreviewUrl);
+      }
+    };
+  }, [bannerPreviewUrl, posterPreviewUrl, editBannerPreviewUrl, editPosterPreviewUrl]);
 
   const addNote = () => {
     if (noteInput.trim() !== "" && partnerNotes.length < 20) {
@@ -383,7 +515,7 @@ export const PartnerList = ({
               </div>
               <div>
                 <label htmlFor="edit-description" className="mb-1 block text-sm font-medium">
-                  Description
+                  Beschreibung
                 </label>
                 <Textarea
                   id="edit-description"
@@ -394,17 +526,18 @@ export const PartnerList = ({
               </div>
               <div>
                 <label htmlFor="edit-partner-guild-id" className="mb-1 block text-sm font-medium">
-                  Partner Guild ID
+                  Partner Server ID (optional)
                 </label>
                 <Input
                   id="edit-partner-guild-id"
                   value={editPartner.partnerGuildId}
                   onChange={(e) => handleEditPartnerServerChange(e.target.value)}
+                  placeholder="Discord Server ID (wenn verfügbar)"
                 />
               </div>
               <div>
-                <label htmlFor="edit-notes" className="mb-1 block text-sm font-medium">
-                  Notes
+                <label className="mb-1 block text-sm font-medium">
+                  Notizen (maximal 20)
                 </label>
                 {editPartnerNotes.map((note, index) => (
                   <div key={index} className="mb-2 flex items-center space-x-2">
@@ -452,94 +585,152 @@ export const PartnerList = ({
                 )}
               </div>
               <div>
-                <label htmlFor="edit-tags" className="mb-1 block text-sm font-medium">
-                  Tags
+                <label className="mb-1 block text-sm font-medium">
+                  Tags (maximal 20)
                 </label>
-                <Input
-                  id="edit-tags"
-                  type="text"
-                  value={editTagInput}
-                  onChange={(e) => setEditTagInput(e.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="icon"
-                  onClick={() => {
-                    if (editTagInput.trim() !== "") {
-                      setEditPartner({ ...editPartner, tags: [...editPartner.tags, editTagInput] });
-                      setEditTagInput("");
-                    }
-                  }}
-                >
-                  <Icons.Plus className={iconVariants({ variant: "button" })} />
-                </Button>
-                {editPartner.tags.map((tag, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
-                      {tag}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="red"
-                      size="icon"
-                      onClick={() => {
-                        const newTags = [...editPartner.tags];
-                        newTags.splice(index, 1);
-                        setEditPartner({ ...editPartner, tags: newTags });
-                      }}
-                    >
-                      <Icons.Trash className={iconVariants({ variant: "button" })} />
-                    </Button>
-                  </div>
-                ))}
+                <div className="mb-2 flex items-center space-x-2">
+                  <Input
+                    value={editTagInput}
+                    onChange={(e) => setEditTagInput(e.target.value)}
+                    placeholder="Neuen Tag eingeben"
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="icon"
+                    onClick={() => {
+                      if (editTagInput.trim() !== "") {
+                        setEditPartner({ ...editPartner, tags: [...editPartner.tags, editTagInput] });
+                        setEditTagInput("");
+                      }
+                    }}
+                  >
+                    <Icons.Plus className={iconVariants({ variant: "button" })} />
+                  </Button>
+                </div>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {editPartner.tags.map((tag, index) => (
+                    <div key={index} className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm">
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        className="text-neutral-400 hover:text-destructive"
+                        onClick={() => {
+                          const newTags = [...editPartner.tags];
+                          newTags.splice(index, 1);
+                          setEditPartner({ ...editPartner, tags: newTags });
+                        }}
+                      >
+                        <Icons.X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
               {/* Public Link - only shown when there is a partner server */}
               {editPartner.partnerGuildId && (
                 <div>
                   <label htmlFor="edit-public-link" className="mb-1 block text-sm font-medium">
-                    Public Link
+                    Öffentlicher Link
                   </label>
                   <Input
                     id="edit-public-link"
                     type="text"
                     value={editPartner.publicLink}
                     onChange={(e) => setEditPartner({ ...editPartner, publicLink: e.target.value })}
-                    placeholder="Auto-filled when available"
+                    placeholder="Wird automatisch ausgefüllt, wenn verfügbar"
                   />
                 </div>
               )}
+              {/* Banner Image with Copy URL button */}
               <div>
                 <label htmlFor="edit-banner" className="mb-1 block text-sm font-medium">
-                  Banner Image
+                  Banner Bild
                 </label>
-                <div className="flex items-center space-x-2">
+                <div className="mb-2">
                   <Input
                     id="edit-banner"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setEditSelectedFile(e.target.files?.[0] || null)}
+                    onChange={handleEditBannerFileChange}
                   />
                   {partner.hasBanner && !editSelectedFile && (
-                    <span className="text-xs text-neutral-400">Current banner will be kept if no new image is selected</span>
+                    <span className="text-xs text-neutral-400">Aktuelles Banner wird beibehalten, wenn kein neues Bild ausgewählt wird</span>
                   )}
                 </div>
+                
+                {/* Banner Preview with Copy URL button */}
+                {editBannerPreviewUrl && (
+                  <div className="mb-2 mt-2">
+                    <div className="relative overflow-hidden rounded-md">
+                      <Image
+                        src={editBannerPreviewUrl}
+                        alt="Banner Vorschau"
+                        width={640}
+                        height={160}
+                        className="h-40 w-full object-cover"
+                      />
+                      {partner.hasBanner && (
+                        <div className="absolute bottom-2 right-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => copyImageUrlToClipboard(partner.id, "banner")}
+                          >
+                            <Icons.Copy className="mr-1 h-4 w-4" />
+                            Bild-URL kopieren
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
+              {/* Poster Image with Copy URL button */}
               <div>
                 <label htmlFor="edit-poster" className="mb-1 block text-sm font-medium">
-                  Poster Image
+                  Poster Bild
                 </label>
-                <div className="flex items-center space-x-2">
+                <div className="mb-2">
                   <Input
                     id="edit-poster"
                     type="file"
                     accept="image/*"
-                    onChange={(e) => setEditSelectedPosterFile(e.target.files?.[0] || null)}
+                    onChange={handleEditPosterFileChange}
                   />
                   {partner.hasPosters && !editSelectedPosterFile && (
-                    <span className="text-xs text-neutral-400">Current poster will be kept if no new image is selected</span>
+                    <span className="text-xs text-neutral-400">Aktuelles Poster wird beibehalten, wenn kein neues Bild ausgewählt wird</span>
                   )}
                 </div>
+                
+                {/* Poster Preview with Copy URL button */}
+                {editPosterPreviewUrl && (
+                  <div className="mb-2 mt-2">
+                    <div className="relative overflow-hidden rounded-md">
+                      <Image
+                        src={editPosterPreviewUrl}
+                        alt="Poster Vorschau"
+                        width={640}
+                        height={160}
+                        className="h-40 w-full object-cover"
+                      />
+                      {partner.hasPosters && (
+                        <div className="absolute bottom-2 right-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => copyImageUrlToClipboard(partner.id, "poster")}
+                          >
+                            <Icons.Copy className="mr-1 h-4 w-4" />
+                            Bild-URL kopieren
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end space-x-2">
                 <Button
@@ -575,28 +766,56 @@ export const PartnerList = ({
                 </div>
               </div>
               <div className="mt-2 flex flex-row gap-4">
-                {partner.hasBanner && (
-                  <div className="shrink-0 overflow-hidden rounded-md">
-                    <Image
-                      src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
-                      alt={`${partner.name} banner`}
-                      width={640}
-                      height={160}
-                      className="h-40 w-full object-cover"
-                    />
-                  </div>
-                )}
-                {partner.hasPosters && (
-                  <div className="shrink-0 overflow-hidden rounded-md">
-                    <Image
-                      src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`}
-                      alt={`${partner.name} poster`}
-                      width={640}
-                      height={160}
-                      className="h-40 w-full object-cover"
-                    />
-                  </div>
-                )}
+                {/* Partner card with improved image display and copy button */}
+                <div className="flex flex-col">
+                  {/* Server Banner */}
+                  {partner.hasBanner && (
+                    <div className="relative h-40 w-full overflow-hidden">
+                      <Image
+                        src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
+                        alt={`${partner.name} Banner`}
+                        width={640}
+                        height={160}
+                        className="h-40 w-full object-cover"
+                      />
+                      <div className="absolute bottom-2 right-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => copyImageUrlToClipboard(partner.id, "banner")}
+                        >
+                          <Icons.Copy className="mr-1 h-4 w-4" />
+                          Bild-URL
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Server Poster */}
+                  {partner.hasPosters && (
+                    <div className="relative h-40 w-full overflow-hidden">
+                      <Image
+                        src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`}
+                        alt={`${partner.name} Poster`}
+                        width={640}
+                        height={160}
+                        className="h-40 w-full object-cover"
+                      />
+                      <div className="absolute bottom-2 right-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => copyImageUrlToClipboard(partner.id, "poster")}
+                        >
+                          <Icons.Copy className="mr-1 h-4 w-4" />
+                          Bild-URL
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1">
                   {partner.description && <p className="text-neutral-300">{partner.description}</p>}
                   
@@ -729,167 +948,204 @@ export const PartnerList = ({
       {isAdding ? (
         <Block className="border-blue-500">
           <form onSubmit={handleAddPartner} className="space-y-4">
+            {/* Partner Name */}
             <div>
               <label htmlFor="partner-name" className="mb-1 block text-sm font-medium">
-                Partner Server Name
+                Partner Name
               </label>
               <Input
                 id="partner-name"
                 value={newPartner.name}
                 onChange={(e) => setNewPartner({ ...newPartner, name: e.target.value })}
-                required
+                placeholder="Name des Partners"
               />
             </div>
+            
+            {/* Partner Description */}
             <div>
               <label htmlFor="partner-description" className="mb-1 block text-sm font-medium">
-                Description
+                Beschreibung
               </label>
               <Textarea
                 id="partner-description"
                 value={newPartner.description}
                 onChange={(e) => setNewPartner({ ...newPartner, description: e.target.value })}
-                rows={3}
-                placeholder="Optional description of the partner server"
+                placeholder="Beschreibung des Partners"
               />
             </div>
+            
+            {/* Partner Server */}
             <div>
               <label htmlFor="partner-partner-guild-id" className="mb-1 block text-sm font-medium">
-                Partner Guild ID
+                Partner Server ID (optional)
               </label>
               <Input
                 id="partner-partner-guild-id"
                 value={newPartner.partnerGuildId}
                 onChange={(e) => handlePartnerServerChange(e.target.value)}
+                placeholder="Discord Server ID (wenn verfügbar)"
               />
             </div>
+            
+            {/* Tags */}
             <div>
               <label className="mb-1 block text-sm font-medium">
-                Notes
+                Tags (maximal 20)
               </label>
-              {partnerNotes.map((note, index) => (
-                <div key={index} className="mb-2 flex items-center space-x-2">
-                  <textarea
-                    value={note}
-                    onChange={(e) => {
-                      const newNotes = [...partnerNotes];
-                      newNotes[index] = e.target.value;
-                      setPartnerNotes(newNotes);
-                    }}
-                    className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
-                    rows={2}
-                  />
-                  <Button
-                    type="button"
-                    variant="red"
-                    size="icon"
-                    onClick={() => removeNote(index)}
-                  >
-                    <Icons.Trash className={iconVariants({ variant: "button" })} />
-                  </Button>
-                </div>
-              ))}
-              {partnerNotes.length < 20 && (
-                <div className="flex items-center space-x-2">
-                  <textarea
-                    value={noteInput}
-                    onChange={(e) => setNoteInput(e.target.value)}
-                    className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
-                    rows={2}
-                    placeholder="Add a new note..."
-                  />
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="icon"
-                    onClick={addNote}
-                  >
-                    <Icons.Plus className={iconVariants({ variant: "button" })} />
-                  </Button>
-                </div>
-              )}
-              {partnerNotes.length >= 20 && (
-                <p className="text-xs text-yellow-500">Maximum of 20 notes reached</p>
-              )}
+              <div className="mb-2 flex items-center space-x-2">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Neuen Tag eingeben"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    if (tagInput.trim() !== "") {
+                      setNewPartner({ ...newPartner, tags: [...newPartner.tags, tagInput] });
+                      setTagInput("");
+                    }
+                  }}
+                  disabled={tagInput.trim() === "" || newPartner.tags.length >= 20}
+                >
+                  <Icons.Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Display tags */}
+              <div className="mb-4 flex flex-wrap gap-2">
+                {newPartner.tags.map((tag, index) => (
+                  <div key={index} className="flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-sm">
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      className="text-neutral-400 hover:text-destructive"
+                      onClick={() => {
+                        const newTags = [...newPartner.tags];
+                        newTags.splice(index, 1);
+                        setNewPartner({ ...newPartner, tags: newTags });
+                      }}
+                    >
+                      <Icons.X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+            
+            {/* Notes */}
             <div>
-              <label htmlFor="partner-tags" className="mb-1 block text-sm font-medium">
-                Tags
+              <label className="mb-1 block text-sm font-medium">
+                Notizen (maximal 20)
               </label>
-              <Input
-                id="partner-tags"
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-              />
-              <Button
-                type="button"
-                variant="primary"
-                size="icon"
-                onClick={() => {
-                  if (tagInput.trim() !== "") {
-                    setNewPartner({ ...newPartner, tags: [...newPartner.tags, tagInput] });
-                    setTagInput("");
-                  }
-                }}
-              >
-                <Icons.Plus className={iconVariants({ variant: "button" })} />
-              </Button>
-              {newPartner.tags.map((tag, index) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <span className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
-                    {tag}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="red"
-                    size="icon"
-                    onClick={() => {
-                      const newTags = [...newPartner.tags];
-                      newTags.splice(index, 1);
-                      setNewPartner({ ...newPartner, tags: newTags });
-                    }}
-                  >
-                    <Icons.Trash className={iconVariants({ variant: "button" })} />
-                  </Button>
-                </div>
-              ))}
+              <div className="mb-2 flex items-center space-x-2">
+                <Input
+                  value={noteInput}
+                  onChange={(e) => setNoteInput(e.target.value)}
+                  placeholder="Neue Notiz eingeben"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={addNote}
+                  disabled={noteInput.trim() === "" || partnerNotes.length >= 20}
+                >
+                  <Icons.Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Display notes */}
+              <div className="mb-4 space-y-2">
+                {partnerNotes.map((note, index) => (
+                  <div key={index} className="flex items-center justify-between rounded bg-background p-2">
+                    <p className="text-sm">{note}</p>
+                    <button
+                      type="button"
+                      className="text-neutral-400 hover:text-destructive"
+                      onClick={() => removeNote(index)}
+                    >
+                      <Icons.Trash className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
+            
             {/* Public Link - only shown when there is a partner server */}
             {newPartner.partnerGuildId && (
               <div>
                 <label htmlFor="partner-public-link" className="mb-1 block text-sm font-medium">
-                  Public Link
+                  Öffentlicher Link
                 </label>
                 <Input
                   id="partner-public-link"
                   type="text"
                   value={newPartner.publicLink}
                   onChange={(e) => setNewPartner({ ...newPartner, publicLink: e.target.value })}
-                  placeholder="Auto-filled when available"
+                  placeholder="Wird automatisch ausgefüllt, wenn verfügbar"
                 />
               </div>
             )}
+            
+            {/* Banner Image */}
             <div>
               <label htmlFor="partner-banner" className="mb-1 block text-sm font-medium">
-                Banner Image (Optional)
+                Banner Bild (Optional)
               </label>
-              <Input
-                id="partner-banner"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              />
+              <div className="mb-2">
+                <Input
+                  id="partner-banner"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerFileChange}
+                />
+              </div>
+              
+              {/* Banner Preview */}
+              {bannerPreviewUrl && (
+                <div className="mb-2 mt-2">
+                  <div className="relative overflow-hidden rounded-md">
+                    <Image
+                      src={bannerPreviewUrl}
+                      alt="Banner Vorschau"
+                      width={640}
+                      height={160}
+                      className="h-40 w-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
+            
+            {/* Poster Image */}
             <div>
               <label htmlFor="partner-poster" className="mb-1 block text-sm font-medium">
-                Poster Image (Optional)
+                Poster Bild (Optional)
               </label>
-              <Input
-                id="partner-poster"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setSelectedPosterFile(e.target.files?.[0] || null)}
-              />
+              <div className="mb-2">
+                <Input
+                  id="partner-poster"
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePosterFileChange}
+                />
+              </div>
+              
+              {/* Poster Preview */}
+              {posterPreviewUrl && (
+                <div className="mb-2 mt-2">
+                  <div className="relative overflow-hidden rounded-md">
+                    <Image
+                      src={posterPreviewUrl}
+                      alt="Poster Vorschau"
+                      width={640}
+                      height={160}
+                      className="h-40 w-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex justify-end space-x-2">
               <Button

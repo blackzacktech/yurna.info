@@ -141,6 +141,21 @@ export async function PUT(
 
     // Save files if provided
     if (banner) {
+      // Delete old banner files if they exist
+      if (existingPartner.hasBanner) {
+        // Try to delete from both possible locations
+        const serverBannerPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "banner.png");
+        if (fs.existsSync(serverBannerPath)) {
+          fs.unlinkSync(serverBannerPath);
+        }
+        
+        const uploadsBannerPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "banner.png");
+        if (fs.existsSync(uploadsBannerPath)) {
+          fs.unlinkSync(uploadsBannerPath);
+        }
+      }
+      
+      // Save new banner
       const buffer = Buffer.from(await banner.arrayBuffer());
       const dir = path.join(
         process.cwd(),
@@ -154,6 +169,31 @@ export async function PUT(
     }
 
     if (posters) {
+      // Delete old poster files if they exist
+      if (existingPartner.hasPosters) {
+        // Try to delete from both possible locations and with both possible filenames
+        const serverPosterPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "posters.png");
+        if (fs.existsSync(serverPosterPath)) {
+          fs.unlinkSync(serverPosterPath);
+        }
+        
+        const serverPosterAltPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "poster.png");
+        if (fs.existsSync(serverPosterAltPath)) {
+          fs.unlinkSync(serverPosterAltPath);
+        }
+        
+        const uploadsPosterPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "posters.png");
+        if (fs.existsSync(uploadsPosterPath)) {
+          fs.unlinkSync(uploadsPosterPath);
+        }
+        
+        const uploadsPosterAltPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "poster.png");
+        if (fs.existsSync(uploadsPosterAltPath)) {
+          fs.unlinkSync(uploadsPosterAltPath);
+        }
+      }
+      
+      // Save new poster
       const buffer = Buffer.from(await posters.arrayBuffer());
       const dir = path.join(
         process.cwd(),
