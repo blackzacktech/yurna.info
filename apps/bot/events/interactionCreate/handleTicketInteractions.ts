@@ -98,8 +98,8 @@ async function handleModalSubmit(interaction: ModalSubmitInteraction, ticketMana
   }
 }
 
-// Export the event handler with the correct event name matching pattern
-export const interactionCreate = async (client: Client, interaction: Interaction) => {
+// Handler für Ticket-Interaktionen
+const eventHandler = async (client: Client, interaction: Interaction) => {
   // Nur fortfahren, wenn es sich um eine ButtonInteraction handelt
   if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
@@ -129,3 +129,7 @@ export const interactionCreate = async (client: Client, interaction: Interaction
     });
   }
 };
+
+// Exportiere beide Namen für den Event-Handler
+export const interactionCreate = eventHandler;
+export const handleTicketInteractions = eventHandler;

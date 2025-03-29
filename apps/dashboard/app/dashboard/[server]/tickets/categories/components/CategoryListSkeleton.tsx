@@ -1,6 +1,8 @@
+"use client";
+
 import { FC } from 'react';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/Card';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const CategoryListSkeleton: FC = () => {
   // Erstellt ein Array mit 3 Elementen für die Skeleton-Karten

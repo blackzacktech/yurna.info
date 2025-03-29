@@ -1,7 +1,9 @@
+"use client";
+
 import { FC } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Buttons';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/Badge';
 import { Edit, MessageSquare, Trash } from 'lucide-react';
 import DeleteCategoryDialog from './DeleteCategoryDialog';
