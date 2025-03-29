@@ -3,9 +3,9 @@
   "version": "6.0.0",
   "description": "Dashboard for Yurna.info built on Next.js and Tailwind.css",
   "scripts": {
-    "start": "PORT=3009 next start",
-    "dev": "PORT=3009 next dev --turbo",
-    "build": "PORT=3009 next build",
+    "start": "next start -p 3009",
+    "dev": "next dev -p 3009 --turbo",
+    "build": "next build",
     "docker:build": "cd ../../ && docker build --tag yurna/dashboard:latest --file ./apps/dashboard/Dockerfile .",
     "deploy": "pnpm run build && pnpm run start",
     "format": "prettier . --write --cache --ignore-unknown",

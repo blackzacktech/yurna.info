@@ -24,6 +24,64 @@ interface TicketTableProps {
   tab: string;
 }
 
+// Define header rendering component separately
+const HeaderCell = ({ title }: { title: string }) => {
+  return <TableColumnHeader title={title} />;
+};
+
+// Define cell renderers as separate components
+const NumberCell = ({ value }: { value: number }) => {
+  return <div className="font-medium">#{value}</div>;
+};
+
+const TopicCell = ({ value }: { value: string | null }) => {
+  return value ? <div>{value}</div> : <div className="text-muted-foreground">Kein Thema angegeben</div>;
+};
+
+const CategoryCell = ({ category }: { category: TicketCategory | null }) => {
+  return category ? 
+    <div>{category.emoji} {category.name}</div> : 
+    <div className="text-muted-foreground">Keine Kategorie</div>;
+};
+
+const StatusCell = ({ ticket }: { ticket: TicketWithRelations }) => {
+  return (
+    <div className="flex items-center gap-2">
+      {ticket.deleted ? (
+        <Badge variant="destructive">Geschlossen</Badge>
+      ) : ticket.open ? (
+        <Badge variant="default">Offen</Badge>
+      ) : (
+        <Badge variant="secondary">Wartend</Badge>
+      )}
+      
+      {ticket.claimedById && (
+        <Badge variant="outline">Beansprucht</Badge>
+      )}
+    </div>
+  );
+};
+
+const UserCell = ({ username }: { username: string }) => {
+  return <div>{username}</div>;
+};
+
+const DateCell = ({ date }: { date: Date }) => {
+  return <div>{format(new Date(date), 'dd.MM.yyyy HH:mm', { locale: de })}</div>;
+};
+
+const ActionCell = ({ ticketId, serverId }: { ticketId: string, serverId: string }) => {
+  return (
+    <div className="text-right">
+      <Button variant="secondary" size="icon" asChild>
+        <Link href={`/dashboard/${serverId}/tickets/${ticketId}`}>
+          <ExternalLink className="h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
+  );
+};
+
 const TicketTable: FC<TicketTableProps> = ({ 
   tickets, 
   currentPage, 
@@ -34,75 +92,37 @@ const TicketTable: FC<TicketTableProps> = ({
   const columns: ColumnDef<TicketWithRelations>[] = [
     {
       accessorKey: 'number',
-      header: ({ column }) => <TableColumnHeader column={column} title="Nr." />,
-      cell: ({ row }) => <div className="font-medium">#{row.getValue('number')}</div>,
+      header: () => <HeaderCell title="Nr." />,
+      cell: ({ row }) => <NumberCell value={row.getValue('number')} />,
     },
     {
       accessorKey: 'topic',
-      header: ({ column }) => <TableColumnHeader column={column} title="Thema" />,
-      cell: ({ row }) => {
-        const topic = row.getValue('topic') as string;
-        return topic ? <div>{topic}</div> : <div className="text-muted-foreground">Kein Thema angegeben</div>;
-      },
+      header: () => <HeaderCell title="Thema" />,
+      cell: ({ row }) => <TopicCell value={row.getValue('topic')} />,
     },
     {
       accessorKey: 'category',
-      header: ({ column }) => <TableColumnHeader column={column} title="Kategorie" />,
-      cell: ({ row }) => {
-        const category = row.original.category;
-        return category ? 
-          <div>{category.emoji} {category.name}</div> : 
-          <div className="text-muted-foreground">Keine Kategorie</div>;
-      },
+      header: () => <HeaderCell title="Kategorie" />,
+      cell: ({ row }) => <CategoryCell category={row.original.category} />,
     },
     {
       accessorKey: 'status',
-      header: ({ column }) => <TableColumnHeader column={column} title="Status" />,
-      cell: ({ row }) => {
-        const ticket = row.original;
-        return (
-          <div className="flex items-center gap-2">
-            {ticket.deleted ? (
-              <Badge variant="destructive">Geschlossen</Badge>
-            ) : ticket.open ? (
-              <Badge variant="default">Offen</Badge>
-            ) : (
-              <Badge variant="secondary">Wartend</Badge>
-            )}
-            
-            {ticket.claimedById && (
-              <Badge variant="outline">Beansprucht</Badge>
-            )}
-          </div>
-        );
-      },
+      header: () => <HeaderCell title="Status" />,
+      cell: ({ row }) => <StatusCell ticket={row.original} />,
     },
     {
       accessorKey: 'createdBy',
-      header: ({ column }) => <TableColumnHeader column={column} title="Erstellt von" />,
-      cell: ({ row }) => <div>{row.original.createdBy.username}</div>,
+      header: () => <HeaderCell title="Erstellt von" />,
+      cell: ({ row }) => <UserCell username={row.original.createdBy.username} />,
     },
     {
       accessorKey: 'createdAt',
-      header: ({ column }) => <TableColumnHeader column={column} title="Erstellt am" />,
-      cell: ({ row }) => {
-        const date = row.original.createdAt;
-        return <div>{format(new Date(date), 'dd.MM.yyyy HH:mm', { locale: de })}</div>;
-      },
+      header: () => <HeaderCell title="Erstellt am" />,
+      cell: ({ row }) => <DateCell date={row.original.createdAt} />,
     },
     {
       id: 'actions',
-      cell: ({ row }) => {
-        return (
-          <div className="text-right">
-            <Button variant="secondary" size="icon" asChild>
-              <Link href={`/dashboard/${serverId}/tickets/${row.original.id}`}>
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        );
-      },
+      cell: ({ row }) => <ActionCell ticketId={row.original.id} serverId={serverId} />,
     },
   ];
 
