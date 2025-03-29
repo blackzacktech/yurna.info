@@ -7,7 +7,6 @@ import { Icons, iconVariants } from "@/components/ui/Icons";
 import { Input, Textarea } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import type { Guild } from "@prisma/client";
 import Image from "next/image";
 
 // Erweiterte Typdefinition für Partner mit Stats
@@ -369,7 +368,24 @@ export const PartnerList = ({
                         <Icons.StickyNote className={iconVariants({ variant: "small" })} />
                         <span className="ml-1 font-medium">Notizen:</span>
                       </div>
-                      <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>
+                      {/* Check if notes is a JSON string and parse it if it is */}
+                      {(() => {
+                        try {
+                          const parsedNotes = JSON.parse(partner.notes || "[]");
+                          if (Array.isArray(parsedNotes)) {
+                            return (
+                              <div className="mt-1 flex flex-col gap-2">
+                                {parsedNotes.map((note, index) => (
+                                  <p key={index} className="text-sm text-neutral-300">{note}</p>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>;
+                        } catch (e) {
+                          return <p className="mt-1 text-sm text-neutral-300">{partner.notes}</p>;
+                        }
+                      })()}
                     </div>
                   )}
                 </div>

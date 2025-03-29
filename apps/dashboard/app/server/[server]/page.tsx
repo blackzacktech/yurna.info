@@ -93,6 +93,11 @@ export default async function Page(props: { params: Promise<{ server: string }> 
      },
     },
    },
+   guildPartners: {
+    orderBy: {
+     createdAt: "desc"
+    }
+   }
   },
  });
 
@@ -101,7 +106,7 @@ export default async function Page(props: { params: Promise<{ server: string }> 
  const guildPreview = await getGuildPreview(guild.guildId);
  if (!guildPreview || !guildPreview.id) return notFound();
 
- const data = guild.guildXp.map((x, i) => {
+ const data = guild.guildXp.map((x: any, i: number) => {
   return {
    id: i + 1,
    user: x.user,
@@ -149,7 +154,7 @@ export default async function Page(props: { params: Promise<{ server: string }> 
       </Header>
       {guildPreview.emojis && guildPreview.emojis.length > 0 ? (
        <div className="flex flex-row flex-wrap gap-4">
-        {guildPreview.emojis.map((emoji) => (
+        {guildPreview.emojis.map((emoji: any) => (
          <Link key={emoji.id || "" + emoji.name} className="flex flex-col items-center justify-center gap-2" href={`https://cdn.discordapp.com/emojis/${emoji?.id}.${emoji?.animated ? "gif" : "png"}`} target="_blank" rel="noreferrer noopener">
           <Tooltip content={emoji.name || "Unnamed emoji"}>
            <>
@@ -171,7 +176,7 @@ export default async function Page(props: { params: Promise<{ server: string }> 
       </Header>
       {guildPreview.stickers && guildPreview.stickers.length > 0 ? (
        <div className="flex flex-row flex-wrap gap-4">
-        {guildPreview.stickers.map((sticker) => (
+        {guildPreview.stickers.map((sticker: any) => (
          <Link key={sticker.id + sticker.name} className="flex flex-col items-center justify-center gap-2" href={`https://cdn.discordapp.com/stickers/${sticker.id}.${sticker.format_type === 1 ? "png" : sticker.format_type === 2 ? "apng" : sticker.format_type === 3 ? "lottie" : "gif"}`} target="_blank" rel="noreferrer noopener">
           <Tooltip content={sticker.name || "Unnamed sticker"}>
            <>
@@ -187,6 +192,41 @@ export default async function Page(props: { params: Promise<{ server: string }> 
      </Block>
     </div>
    </div>
+
+   {/* Partner Server Section */}
+   {guild.guildPartners && guild.guildPartners.length > 0 && (
+    <div className="mt-6">
+      <Block>
+        <Header className={cn(headerVariants({ variant: "h4", margin: "wide" }), "items-start justify-normal opacity-80")}>
+          Partner Server
+          <span className="ml-auto font-medium opacity-60">{guild.guildPartners.length || "0"}</span>
+        </Header>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {guild.guildPartners.map((partner: any) => (
+            <div key={partner.id} className="flex flex-col overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/50">
+              {partner.hasBanner && (
+                <div className="h-24 w-full overflow-hidden">
+                  <Image
+                    src={`/server/${guild.guildId}/${partner.id}/banner.png`}
+                    alt={`${partner.name} banner`}
+                    width={320}
+                    height={96}
+                    className="h-24 w-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex flex-1 flex-col p-3">
+                <h3 className="text-lg font-semibold">{partner.name}</h3>
+                {partner.description && (
+                  <p className="mt-1 line-clamp-2 text-sm text-neutral-300">{partner.description}</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Block>
+    </div>
+   )}
   </div>
  );
 }

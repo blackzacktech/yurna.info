@@ -5,6 +5,21 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+// Define the GuildPartner type
+type GuildPartner = {
+  id: string;
+  guildId: string;
+  name: string;
+  description: string | null;
+  hasBanner: boolean;
+  hasPosters: boolean;
+  partnerGuildId: string | null;
+  partnershipDate: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { server: string } }
@@ -52,7 +67,7 @@ export async function GET(
     
     // Erweitere die Partner-Daten mit Server-Statistiken für Partner, die auch Yurna nutzen
     const partnersWithStats = await Promise.all(
-      partners.map(async (partner) => {
+      partners.map(async (partner: GuildPartner) => {
         if (partner.partnerGuildId) {
           try {
             // Hole Mitgliederstatistiken für Partner-Gilden
