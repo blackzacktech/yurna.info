@@ -1,14 +1,14 @@
-import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
 import { ChatInputCommandInteraction, Client, GuildMember, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import prismaClient from '@yurna/database';
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('ticket-close')
-    .setDescription('Schließt das aktuelle Ticket'),
+  data: {
+    name: 'ticket-close',
+    description: 'Schließt das aktuelle Ticket'
+  },
 
   name: "ticket-close",
-  description: "🎫 Schließt das aktuelle Ticket",
+  description: " Schließt das aktuelle Ticket",
   type: ApplicationCommandType.ChatInput,
   cooldown: 5000,
   contexts: [InteractionContextType.Guild],

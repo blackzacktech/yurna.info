@@ -1,10 +1,10 @@
-import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
 import { ChatInputCommandInteraction, Client, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('ticket-claim')
-    .setDescription('Beansprucht ein Ticket für dich'),
+  data: {
+    name: 'ticket-claim',
+    description: 'Beansprucht ein Ticket für dich'
+  },
   
   name: "ticket-claim",
   description: "🎫 Beansprucht ein Ticket für dich",

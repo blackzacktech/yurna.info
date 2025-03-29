@@ -1,22 +1,26 @@
-import { SlashCommandBuilder } from '@discordjs/builders/dist/index.js';
 import { AutocompleteInteraction, ChatInputCommandInteraction, Client, ComponentType, StringSelectMenuBuilder, ActionRowBuilder, ApplicationCommandType, InteractionContextType, ApplicationIntegrationType } from 'discord.js';
 import prismaClient from '@yurna/database';
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('ticket-new')
-    .setDescription('Erstellt ein neues Ticket')
-    .addStringOption(option =>
-      option.setName('kategorie')
-        .setDescription('Wähle eine Ticket-Kategorie')
-        .setRequired(true)
-        .setAutocomplete(true)
-    )
-    .addStringOption(option =>
-      option.setName('thema')
-        .setDescription('Gib ein kurzes Thema für dein Ticket an')
-        .setRequired(false)
-    ),
+  data: {
+    name: 'ticket-new',
+    description: 'Erstellt ein neues Ticket',
+    options: [
+      {
+        name: 'kategorie',
+        description: 'Wähle eine Ticket-Kategorie',
+        type: 3, // String
+        required: true,
+        autocomplete: true
+      },
+      {
+        name: 'thema',
+        description: 'Gib ein kurzes Thema für dein Ticket an',
+        type: 3, // String
+        required: false
+      }
+    ]
+  },
 
   name: "ticket-new",
   description: "🎫 Erstellt ein neues Ticket",
