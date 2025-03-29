@@ -27,8 +27,8 @@ export default async function LeaderboardPage(props: { params: Promise<{ server:
   // prettier
   !serverMember ||
   !serverMember.permissions_names ||
-  !serverMember.permissions_names.includes("ManageGuild") ||
-  !serverMember.permissions_names.includes("Administrator")
+  (!serverMember.permissions_names.includes("ManageGuild") && 
+   !serverMember.permissions_names.includes("Administrator"))
  )
   return notFound();
 
