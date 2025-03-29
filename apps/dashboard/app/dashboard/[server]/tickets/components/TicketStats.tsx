@@ -1,3 +1,5 @@
+"use client"
+
 import React, { FC, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/ui/Icons';

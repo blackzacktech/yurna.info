@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Ticket, TicketCategory, User } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { de } from 'date-fns/locale';
