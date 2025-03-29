@@ -95,6 +95,16 @@ export function TableColumnHeader<TData, TValue>({ column, title, className }: D
  );
 }
 
+export function SimpleTableHeader({ 
+  title, 
+  className 
+}: { 
+  title: string; 
+  className?: string;
+}) {
+  return <div className={cn(className)}>{title}</div>;
+}
+
 export const Table = <TData, TValue>({ columns, data, sortBy = [{ id: "id", desc: false }], showControls = true, showSearch = true }: TableProps<TData, TValue>) => {
  const [globalFilter, setGlobalFilter] = useState<string>("");
 

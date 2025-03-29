@@ -98,37 +98,34 @@ async function handleModalSubmit(interaction: ModalSubmitInteraction, ticketMana
   }
 }
 
-export default {
-  name: 'interactionCreate',
-  once: false,
-  async execute(interaction: Interaction, client: Client) {
-    // Nur fortfahren, wenn es sich um eine ButtonInteraction handelt
-    if (!interaction.isButton() && !interaction.isModalSubmit()) return;
+// Export the event handler with the correct event name matching pattern
+export const interactionCreate = async (client: Client, interaction: Interaction) => {
+  // Nur fortfahren, wenn es sich um eine ButtonInteraction handelt
+  if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-    // Ticket-Manager-Instanz aus dem Client holen
-    const ticketManager = client['tickets'];
-    if (!ticketManager) return;
+  // Ticket-Manager-Instanz aus dem Client holen
+  const ticketManager = client['tickets'];
+  if (!ticketManager) return;
 
-    try {
-      // Button-Interaktionen verarbeiten
-      if (interaction.isButton()) {
-        await handleButtonInteraction(interaction, ticketManager);
-      }
-
-      // Modal-Interaktionen verarbeiten
-      if (interaction.isModalSubmit()) {
-        await handleModalSubmit(interaction, ticketManager);
-      }
-    } catch (error) {
-      console.error('Fehler bei der Ticket-Interaktion:', error);
-      
-      // Nur antworten, wenn die Interaktion noch nicht beantwortet wurde
-      if (interaction.replied || interaction.deferred) return;
-      
-      await interaction.reply({
-        content: 'Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten.',
-        ephemeral: true
-      });
+  try {
+    // Button-Interaktionen verarbeiten
+    if (interaction.isButton()) {
+      await handleButtonInteraction(interaction, ticketManager);
     }
+
+    // Modal-Interaktionen verarbeiten
+    if (interaction.isModalSubmit()) {
+      await handleModalSubmit(interaction, ticketManager);
+    }
+  } catch (error) {
+    console.error('Fehler bei der Ticket-Interaktion:', error);
+    
+    // Nur antworten, wenn die Interaktion noch nicht beantwortet wurde
+    if (interaction.replied || interaction.deferred) return;
+    
+    await interaction.reply({
+      content: 'Bei der Verarbeitung deiner Anfrage ist ein Fehler aufgetreten.',
+      ephemeral: true
+    });
   }
 };

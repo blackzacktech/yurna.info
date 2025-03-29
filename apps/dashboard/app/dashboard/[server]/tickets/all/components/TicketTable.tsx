@@ -1,6 +1,5 @@
 import { FC } from 'react';
-import { Ticket, TicketCategory, User } from '@prisma/client';
-import { Table, TableColumnHeader } from "@/components/ui/Table";
+import { Table, SimpleTableHeader } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -9,11 +8,29 @@ import { Button } from '@/components/ui/Buttons';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 
-interface TicketWithRelations extends Ticket {
+// Define interfaces that match your Prisma schema
+interface TicketCategory {
+  id: number;
+  name: string;
+  emoji: string;
+  description: string;
+}
+
+interface User {
+  id: string;
+  username: string;
+}
+
+interface TicketWithRelations {
+  id: string;
+  number: number;
+  topic: string | null;
   category: TicketCategory | null;
   createdBy: User;
-  claimedBy: User | null;
-  closedBy: User | null;
+  createdAt: Date;
+  open: boolean;
+  deleted: boolean;
+  claimedById: string | null;
 }
 
 interface TicketTableProps {
@@ -25,11 +42,6 @@ interface TicketTableProps {
 }
 
 // Define header rendering component separately
-const HeaderCell = ({ title }: { title: string }) => {
-  return <TableColumnHeader title={title} />;
-};
-
-// Define cell renderers as separate components
 const NumberCell = ({ value }: { value: number }) => {
   return <div className="font-medium">#{value}</div>;
 };
@@ -73,7 +85,7 @@ const DateCell = ({ date }: { date: Date }) => {
 const ActionCell = ({ ticketId, serverId }: { ticketId: string, serverId: string }) => {
   return (
     <div className="text-right">
-      <Button variant="secondary" size="icon" asChild>
+      <Button variant="secondary" asChild>
         <Link href={`/dashboard/${serverId}/tickets/${ticketId}`}>
           <ExternalLink className="h-4 w-4" />
         </Link>
@@ -92,32 +104,32 @@ const TicketTable: FC<TicketTableProps> = ({
   const columns: ColumnDef<TicketWithRelations>[] = [
     {
       accessorKey: 'number',
-      header: () => <HeaderCell title="Nr." />,
+      header: () => <SimpleTableHeader title="Nr." />,
       cell: ({ row }) => <NumberCell value={row.getValue('number')} />,
     },
     {
       accessorKey: 'topic',
-      header: () => <HeaderCell title="Thema" />,
+      header: () => <SimpleTableHeader title="Thema" />,
       cell: ({ row }) => <TopicCell value={row.getValue('topic')} />,
     },
     {
       accessorKey: 'category',
-      header: () => <HeaderCell title="Kategorie" />,
+      header: () => <SimpleTableHeader title="Kategorie" />,
       cell: ({ row }) => <CategoryCell category={row.original.category} />,
     },
     {
       accessorKey: 'status',
-      header: () => <HeaderCell title="Status" />,
+      header: () => <SimpleTableHeader title="Status" />,
       cell: ({ row }) => <StatusCell ticket={row.original} />,
     },
     {
       accessorKey: 'createdBy',
-      header: () => <HeaderCell title="Erstellt von" />,
+      header: () => <SimpleTableHeader title="Erstellt von" />,
       cell: ({ row }) => <UserCell username={row.original.createdBy.username} />,
     },
     {
       accessorKey: 'createdAt',
-      header: () => <HeaderCell title="Erstellt am" />,
+      header: () => <SimpleTableHeader title="Erstellt am" />,
       cell: ({ row }) => <DateCell date={row.original.createdAt} />,
     },
     {
@@ -135,7 +147,6 @@ const TicketTable: FC<TicketTableProps> = ({
         <div className="flex items-center justify-center space-x-2 py-4">
           <Button
             variant="secondary"
-            size="sm"
             disabled={currentPage <= 1}
             asChild
           >
@@ -151,7 +162,6 @@ const TicketTable: FC<TicketTableProps> = ({
           </span>
           <Button
             variant="secondary"
-            size="sm"
             disabled={currentPage >= totalPages}
             asChild
           >
