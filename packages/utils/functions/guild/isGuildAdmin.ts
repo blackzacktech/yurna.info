@@ -1,21 +1,18 @@
 import { getGuild } from "./getGuild";
 import { getGuildMember } from "./getGuildMember";
-import { getSession } from "@yurna/database/auth";
 import { PermissionFlagsBits } from "discord-api-types/v10";
 
 /**
  * Checks if a user is an admin in a guild.
  * @param serverId The ID of the guild
- * @param userId The ID of the user (optional, defaults to current session user)
+ * @param userId The ID of the user (optional, defaults to undefined for compatibility)
  * @returns A boolean indicating if the user is an admin
  */
 export async function isGuildAdmin(serverId: string, userId?: string): Promise<boolean> {
   try {
-    // If no userId is provided, get it from the session
+    // If no userId is provided, we can't check permissions
     if (!userId) {
-      const session = await getSession();
-      if (!session?.user?.id) return false;
-      userId = session.user.id;
+      return false;
     }
 
     // Get the guild and member

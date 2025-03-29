@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getSession } from '@/lib/session';
 
 import TicketDashboard from './components/TicketDashboard';
 import TicketCategoryList from './components/TicketCategoryList';
@@ -15,9 +16,13 @@ import TicketStats from './components/TicketStats';
 export default async function TicketsPage({ params }: { params: { server: string } }) {
   const { server } = params;
   
+  // Aktuelle Session abrufen
+  const session = await getSession();
+  const userId = session?.id; // Session enthält die Discord-ID direkt
+  
   // Guild-Daten abrufen und Berechtigungen prüfen
   const guild = await getGuildInfo(server);
-  const isAdmin = await isGuildAdmin(server);
+  const isAdmin = await isGuildAdmin(server, userId);
   
   if (!guild || !isAdmin) redirect('/dashboard');
 
