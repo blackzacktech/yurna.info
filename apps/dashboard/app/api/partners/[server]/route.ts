@@ -27,8 +27,8 @@ export async function GET(
   if (
     !serverMember ||
     !serverMember.permissions_names ||
-    !serverMember.permissions_names.includes("ManageGuild") ||
-    !serverMember.permissions_names.includes("Administrator")
+    (!serverMember.permissions_names.includes("ManageGuild") && 
+     !serverMember.permissions_names.includes("Administrator"))
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -123,8 +123,8 @@ export async function POST(
   if (
     !serverMember ||
     !serverMember.permissions_names ||
-    !serverMember.permissions_names.includes("ManageGuild") ||
-    !serverMember.permissions_names.includes("Administrator")
+    (!serverMember.permissions_names.includes("ManageGuild") && 
+     !serverMember.permissions_names.includes("Administrator"))
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
