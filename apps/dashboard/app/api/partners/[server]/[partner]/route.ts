@@ -53,6 +53,9 @@ export async function PUT(
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const banner = formData.get("banner") as File | null;
+    const posters = formData.get("posters") as File | null;
+    const partnerGuildId = formData.get("partnerGuildId") as string || null;
+    const notes = formData.get("notes") as string || "";
 
     if (!name) {
       return NextResponse.json(
@@ -63,6 +66,24 @@ export async function PUT(
 
     // If a new banner is uploaded, update the hasBanner flag
     const hasBanner = banner ? true : existingPartner.hasBanner;
+    // If new posters are uploaded, update the hasPosters flag
+    const hasPosters = posters ? true : existingPartner.hasPosters;
+
+    // Verify partnerGuildId if provided
+    if (partnerGuildId && partnerGuildId !== existingPartner.partnerGuildId) {
+      const partnerGuild = await prismaClient.guild.findUnique({
+        where: {
+          guildId: partnerGuildId
+        }
+      });
+      
+      if (!partnerGuild) {
+        return NextResponse.json(
+          { error: "Partner guild not found" },
+          { status: 400 }
+        );
+      }
+    }
 
     const updatedPartner = await prismaClient.guildPartner.update({
       where: {
@@ -72,31 +93,53 @@ export async function PUT(
         name,
         description,
         hasBanner,
+        hasPosters,
+        partnerGuildId,
+        notes,
       },
     });
 
+    // Create directories if they don't exist
+    const publicDir = path.join(process.cwd(), "public");
+    const serverDir = path.join(publicDir, "server", serverDownload.id);
+    const partnerDir = path.join(serverDir, partner);
+    
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(serverDir)) {
+      fs.mkdirSync(serverDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(partnerDir)) {
+      fs.mkdirSync(partnerDir, { recursive: true });
+    }
+
     if (banner) {
-      // Create directories if they don't exist
-      const publicDir = path.join(process.cwd(), "public");
-      const serverDir = path.join(publicDir, "server", serverDownload.id);
-      const partnerDir = path.join(serverDir, partner);
-      
-      if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(serverDir)) {
-        fs.mkdirSync(serverDir, { recursive: true });
-      }
-      
-      if (!fs.existsSync(partnerDir)) {
-        fs.mkdirSync(partnerDir, { recursive: true });
+      // Lösche altes Banner, falls vorhanden
+      const bannerPath = path.join(partnerDir, "banner.png");
+      if (fs.existsSync(bannerPath)) {
+        fs.unlinkSync(bannerPath);
       }
 
-      // Save the new banner
+      // Speichere das neue Banner
       const arrayBuffer = await banner.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       fs.writeFileSync(path.join(partnerDir, "banner.png"), buffer);
+    }
+
+    if (posters) {
+      // Lösche alte Werbeplakate, falls vorhanden
+      const postersPath = path.join(partnerDir, "posters.png");
+      if (fs.existsSync(postersPath)) {
+        fs.unlinkSync(postersPath);
+      }
+
+      // Speichere die neuen Werbeplakate
+      const arrayBuffer = await posters.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      fs.writeFileSync(path.join(partnerDir, "posters.png"), buffer);
     }
 
     return NextResponse.json(updatedPartner);
@@ -160,27 +203,38 @@ export async function DELETE(
       },
     });
 
-    // Delete banner if exists
+    // Pfad zum Partner-Verzeichnis
+    const partnerDir = path.join(
+      process.cwd(),
+      "public",
+      "server",
+      serverDownload.id,
+      partner
+    );
+
+    // Lösche Banner, falls vorhanden
     if (existingPartner.hasBanner) {
-      const partnerDir = path.join(
-        process.cwd(),
-        "public",
-        "server",
-        serverDownload.id,
-        partner
-      );
       const bannerPath = path.join(partnerDir, "banner.png");
       
       if (fs.existsSync(bannerPath)) {
         fs.unlinkSync(bannerPath);
       }
+    }
+    
+    // Lösche Werbeplakate, falls vorhanden
+    if (existingPartner.hasPosters) {
+      const postersPath = path.join(partnerDir, "posters.png");
       
-      // Try to remove directory if empty
-      try {
-        fs.rmdirSync(partnerDir);
-      } catch (error) {
-        // Ignore if directory is not empty
+      if (fs.existsSync(postersPath)) {
+        fs.unlinkSync(postersPath);
       }
+    }
+    
+    // Versuche, das Verzeichnis zu löschen, wenn es leer ist
+    try {
+      fs.rmdirSync(partnerDir);
+    } catch (error) {
+      // Ignoriere Fehler, wenn das Verzeichnis nicht leer ist
     }
 
     return NextResponse.json({ success: true });

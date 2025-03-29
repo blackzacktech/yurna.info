@@ -13,6 +13,8 @@ import loadEvents from "@/util/loaders/loadEvents";
 import loadFonts from "@/util/loaders/loadFonts";
 import loadModals, { type Modal } from "@/util/loaders/loadModals";
 import type { SlashCommand } from "@/util/types/Command";
+// Ticket-System Imports
+import { TicketManager } from './util/tickets/TicketManager';
 
 const cwd = dirname(fileURLToPath(import.meta.url));
 Logger("info", `Current working directory: ${cwd}`);
@@ -70,6 +72,9 @@ client.config = {
  ...reactionRoleConfig,
  logChannelId: "1351286961700081865",
 };
+
+// Ticket-System initialisieren
+client['tickets'] = new TicketManager(client);
 
 await loadCommands(client);
 await loadModals(client);

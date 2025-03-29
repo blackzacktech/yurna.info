@@ -39,6 +39,7 @@ export const PartnerList = ({
     notes: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedPosterFile, setSelectedPosterFile] = useState<File | null>(null);
   const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
   const [editPartner, setEditPartner] = useState({
     name: "",
@@ -47,6 +48,7 @@ export const PartnerList = ({
     notes: "",
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
+  const [editSelectedPosterFile, setEditSelectedPosterFile] = useState<File | null>(null);
 
   const handleAddPartner = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -65,6 +67,9 @@ export const PartnerList = ({
     if (selectedFile) {
       formData.append("banner", selectedFile);
     }
+    if (selectedPosterFile) {
+      formData.append("posters", selectedPosterFile);
+    }
 
     try {
       const response = await fetch(`/api/partners/${serverId}`, {
@@ -75,6 +80,7 @@ export const PartnerList = ({
       if (response.ok) {
         setNewPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
         setSelectedFile(null);
+        setSelectedPosterFile(null);
         setIsAdding(false);
         router.refresh();
       }
@@ -102,6 +108,9 @@ export const PartnerList = ({
     if (editSelectedFile) {
       formData.append("banner", editSelectedFile);
     }
+    if (editSelectedPosterFile) {
+      formData.append("posters", editSelectedPosterFile);
+    }
 
     try {
       const response = await fetch(`/api/partners/${serverId}/${partnerId}`, {
@@ -112,6 +121,7 @@ export const PartnerList = ({
       if (response.ok) {
         setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "" });
         setEditSelectedFile(null);
+        setEditSelectedPosterFile(null);
         setEditingPartnerId(null);
         router.refresh();
       }
@@ -223,6 +233,22 @@ export const PartnerList = ({
                   )}
                 </div>
               </div>
+              <div>
+                <label htmlFor="edit-poster" className="mb-1 block text-sm font-medium">
+                  Poster Image
+                </label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="edit-poster"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setEditSelectedPosterFile(e.target.files?.[0] || null)}
+                  />
+                  {partner.hasPoster && !editSelectedPosterFile && (
+                    <span className="text-xs text-neutral-400">Current poster will be kept if no new image is selected</span>
+                  )}
+                </div>
+              </div>
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
@@ -262,6 +288,17 @@ export const PartnerList = ({
                     <Image
                       src={`/server/${serverId}/${partner.id}/banner.png`}
                       alt={`${partner.name} banner`}
+                      width={120}
+                      height={60}
+                      className="h-auto w-[120px] object-cover"
+                    />
+                  </div>
+                )}
+                {partner.hasPoster && (
+                  <div className="shrink-0 overflow-hidden rounded-md">
+                    <Image
+                      src={`/server/${serverId}/${partner.id}/posters.png`}
+                      alt={`${partner.name} poster`}
                       width={120}
                       height={60}
                       className="h-auto w-[120px] object-cover"
@@ -368,6 +405,17 @@ export const PartnerList = ({
                 type="file"
                 accept="image/*"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <div>
+              <label htmlFor="partner-poster" className="mb-1 block text-sm font-medium">
+                Poster Image (Optional)
+              </label>
+              <Input
+                id="partner-poster"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedPosterFile(e.target.files?.[0] || null)}
               />
             </div>
             <div className="flex justify-end space-x-2">
