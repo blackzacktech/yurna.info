@@ -1,3 +1,5 @@
+"use client"
+
 import { FC, useState } from 'react';
 import { TicketQuestion } from '@prisma/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

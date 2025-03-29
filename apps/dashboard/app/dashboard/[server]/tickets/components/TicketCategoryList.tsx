@@ -1,3 +1,5 @@
+"use client"
+
 import { FC, useState } from 'react';
 import { TicketCategory } from '@prisma/client';
 import { Button } from '@/components/ui/button';
