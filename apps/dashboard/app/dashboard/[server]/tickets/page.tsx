@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getSession } from '@/lib/session';
+import { Icons } from '@/components/ui/Icons';
 
 import TicketDashboard from './components/TicketDashboard';
 import TicketCategoryList from './components/TicketCategoryList';
@@ -83,6 +84,12 @@ export default async function TicketsPage({ params }: { params: { server: string
             <Button variant="secondary" asChild>
               <Link href={`/dashboard/${server}/tickets/all`}>
                 Alle Tickets
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/${server}/tickets/settings`} className="inline-flex items-center justify-center gap-1.5">
+                <Icons.Settings className="h-4 w-4" aria-hidden="true" />
+                <span>Einstellungen</span>
               </Link>
             </Button>
           </div>

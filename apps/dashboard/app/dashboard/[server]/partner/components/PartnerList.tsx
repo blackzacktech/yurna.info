@@ -530,6 +530,7 @@ export const PartnerList = ({
                       type="button"
                       variant="red"
                       size="icon"
+                      className="inline-flex h-9 w-9 items-center justify-center"
                       onClick={() => removeEditNote(index)}
                     >
                       <Icons.Trash className={iconVariants({ variant: "button" })} />
@@ -549,6 +550,7 @@ export const PartnerList = ({
                       type="button"
                       variant="primary"
                       size="icon"
+                      className="inline-flex h-9 w-9 items-center justify-center"
                       onClick={addEditNote}
                     >
                       <Icons.Plus className={iconVariants({ variant: "button" })} />
@@ -571,14 +573,15 @@ export const PartnerList = ({
                   />
                   <Button
                     type="button"
-                    variant="primary"
-                    size="icon"
+                    variant="secondary"
+                    className="inline-flex h-9 w-9 items-center justify-center"
                     onClick={() => {
                       if (editTagInput.trim() !== "") {
                         setEditPartner({ ...editPartner, tags: [...editPartner.tags, editTagInput] });
                         setEditTagInput("");
                       }
                     }}
+                    disabled={editTagInput.trim() === "" || editPartner.tags.length >= 20}
                   >
                     <Icons.Plus className={iconVariants({ variant: "button" })} />
                   </Button>
@@ -651,10 +654,11 @@ export const PartnerList = ({
                             type="button"
                             variant="secondary"
                             size="sm"
+                            className="inline-flex h-9 items-center justify-center gap-1.5"
                             onClick={() => copyImageUrlToClipboard(partner.id, "banner")}
                           >
-                            <Icons.Copy className="mr-1 h-4 w-4" />
-                            Bild-URL kopieren
+                            <Icons.Copy className="h-4 w-4" aria-hidden="true" />
+                            <span>Bild-URL</span>
                           </Button>
                         </div>
                       )}
@@ -696,10 +700,11 @@ export const PartnerList = ({
                             type="button"
                             variant="secondary"
                             size="sm"
+                            className="inline-flex h-9 items-center justify-center gap-1.5"
                             onClick={() => copyImageUrlToClipboard(partner.id, "poster")}
                           >
-                            <Icons.Copy className="mr-1 h-4 w-4" />
-                            Bild-URL kopieren
+                            <Icons.Copy className="h-4 w-4" aria-hidden="true" />
+                            <span>Bild-URL</span>
                           </Button>
                         </div>
                       )}
@@ -713,10 +718,11 @@ export const PartnerList = ({
                   variant="secondary"
                   onClick={() => setEditingPartnerId(null)}
                   disabled={isSubmitting}
+                  className="inline-flex h-9 w-24 items-center justify-center"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" variant="primary" disabled={isSubmitting}>
+                <Button type="submit" variant="primary" disabled={isSubmitting} className="inline-flex h-9 w-24 items-center justify-center">
                   {isSubmitting ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
@@ -758,10 +764,11 @@ export const PartnerList = ({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          className="inline-flex h-9 items-center justify-center gap-1.5"
                           onClick={() => copyImageUrlToClipboard(partner.id, "banner")}
                         >
-                          <Icons.Copy className="mr-1 h-4 w-4" />
-                          Bild-URL
+                          <Icons.Copy className="h-4 w-4" aria-hidden="true" />
+                          <span>Bild-URL</span>
                         </Button>
                       </div>
                     </div>
@@ -782,10 +789,11 @@ export const PartnerList = ({
                           type="button"
                           variant="secondary"
                           size="sm"
+                          className="inline-flex h-9 items-center justify-center gap-1.5"
                           onClick={() => copyImageUrlToClipboard(partner.id, "poster")}
                         >
-                          <Icons.Copy className="mr-1 h-4 w-4" />
-                          Bild-URL
+                          <Icons.Copy className="h-4 w-4" aria-hidden="true" />
+                          <span>Bild-URL</span>
                         </Button>
                       </div>
                     </div>
@@ -976,6 +984,7 @@ export const PartnerList = ({
                 <Button
                   type="button"
                   variant="secondary"
+                  className="inline-flex h-9 w-9 items-center justify-center"
                   onClick={() => {
                     if (tagInput.trim() !== "") {
                       setNewPartner({ ...newPartner, tags: [...newPartner.tags, tagInput] });
@@ -984,7 +993,7 @@ export const PartnerList = ({
                   }}
                   disabled={tagInput.trim() === "" || newPartner.tags.length >= 20}
                 >
-                  <Icons.Plus className="h-4 w-4" />
+                  <Icons.Plus className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
               
@@ -1023,10 +1032,11 @@ export const PartnerList = ({
                 <Button
                   type="button"
                   variant="secondary"
+                  className="inline-flex h-9 w-9 items-center justify-center"
                   onClick={addNote}
                   disabled={noteInput.trim() === "" || partnerNotes.length >= 20}
                 >
-                  <Icons.Plus className="h-4 w-4" />
+                  <Icons.Plus className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
               
@@ -1128,10 +1138,11 @@ export const PartnerList = ({
                 variant="secondary"
                 onClick={() => setIsAdding(false)}
                 disabled={isSubmitting}
+                className="inline-flex h-9 w-24 items-center justify-center"
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="primary" disabled={isSubmitting}>
+              <Button type="submit" variant="primary" disabled={isSubmitting} className="inline-flex h-9 w-24 items-center justify-center">
                 {isSubmitting ? "Adding..." : "Add Partner"}
               </Button>
             </div>
@@ -1141,7 +1152,7 @@ export const PartnerList = ({
         <Button
           onClick={() => setIsAdding(true)}
           variant="primary"
-          className="flex w-full items-center justify-center"
+          className="inline-flex h-9 w-24 items-center justify-center"
         >
           <Icons.Plus className={iconVariants({ variant: "button" })} />
           Add Partner Server
