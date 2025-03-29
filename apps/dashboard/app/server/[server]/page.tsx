@@ -208,7 +208,7 @@ export default async function Page(props: { params: Promise<{ server: string }> 
               {partner.hasBanner && (
                 <div className="h-24 w-full overflow-hidden">
                   <Image
-                    src={`/server/${guild.guildId}/${partner.id}/banner.png`}
+                    src={`/api/partners/${guild.guildId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
                     alt={`${partner.name} banner`}
                     width={320}
                     height={96}

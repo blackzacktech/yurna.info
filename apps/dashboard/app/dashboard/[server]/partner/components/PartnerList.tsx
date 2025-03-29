@@ -66,8 +66,12 @@ export const PartnerList = ({
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedPosterFile, setSelectedPosterFile] = useState<File | null>(null);
-  const [showNotesInput, setShowNotesInput] = useState(false);
   const [partnerNotes, setPartnerNotes] = useState<string[]>([]);
+  const [editPartnerNotes, setEditPartnerNotes] = useState<string[]>([]);
+  const [showNotesInput, setShowNotesInput] = useState(false);
+  const [editShowNotesInput, setEditShowNotesInput] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [editTagInput, setEditTagInput] = useState("");
   const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
   const [editPartner, setEditPartner] = useState<{
     name: string;
@@ -86,27 +90,51 @@ export const PartnerList = ({
   });
   const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
   const [editSelectedPosterFile, setEditSelectedPosterFile] = useState<File | null>(null);
+  const [noteInput, setNoteInput] = useState("");
+  const [editNoteInput, setEditNoteInput] = useState("");
 
-  const handleAddPartner = async (e: React.FormEvent<HTMLFormElement>) => {
+  const addNote = () => {
+    if (noteInput.trim() !== "" && partnerNotes.length < 20) {
+      setPartnerNotes([...partnerNotes, noteInput]);
+      setNoteInput("");
+    }
+  };
+
+  const removeNote = (index: number) => {
+    const newNotes = [...partnerNotes];
+    newNotes.splice(index, 1);
+    setPartnerNotes(newNotes);
+  };
+
+  const addEditNote = () => {
+    if (editNoteInput.trim() !== "" && editPartnerNotes.length < 20) {
+      setEditPartnerNotes([...editPartnerNotes, editNoteInput]);
+      setEditNoteInput("");
+    }
+  };
+
+  const removeEditNote = (index: number) => {
+    const newNotes = [...editPartnerNotes];
+    newNotes.splice(index, 1);
+    setEditPartnerNotes(newNotes);
+  };
+
+  const handleAddPartner = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPartner.name) return;
-
     setIsSubmitting(true);
+
     const formData = new FormData();
     formData.append("name", newPartner.name);
-    formData.append("description", newPartner.description || "");
+    if (newPartner.description) {
+      formData.append("description", newPartner.description);
+    }
     if (newPartner.partnerGuildId) {
       formData.append("partnerGuildId", newPartner.partnerGuildId);
     }
     
-    // Compile notes into a JSON string if there are any custom notes
-    if (showNotesInput && partnerNotes.length > 0) {
-      const filteredNotes = partnerNotes.filter(note => note.trim() !== "");
-      if (filteredNotes.length > 0) {
-        formData.append("notes", JSON.stringify(filteredNotes));
-      }
-    } else if (newPartner.notes) {
-      formData.append("notes", newPartner.notes);
+    // Convert notes array to JSON if there are notes
+    if (partnerNotes.length > 0) {
+      formData.append("notes", JSON.stringify(partnerNotes));
     }
     
     if (newPartner.tags.length > 0) {
@@ -135,41 +163,48 @@ export const PartnerList = ({
         setSelectedFile(null);
         setSelectedPosterFile(null);
         setIsAdding(false);
-        setShowNotesInput(false);
         setPartnerNotes([]);
+        setTagInput("");
         router.refresh();
       } else {
         const errorData = await response.json();
-        alert(`Error adding partner: ${errorData.error || 'Unknown error'}`);
+        console.error("Error adding partner:", errorData);
       }
     } catch (error) {
       console.error("Error adding partner:", error);
-      alert("Error adding partner. Please try again.");
-    } finally {
-      setIsSubmitting(false);
     }
+
+    setIsSubmitting(false);
   };
-
-  const handleEditPartner = async (e: React.FormEvent<HTMLFormElement>, partnerId: string) => {
+  
+  const handleEditPartner = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editPartner.name) return;
-
     setIsSubmitting(true);
+
+    if (!editingPartnerId) return;
+
     const formData = new FormData();
     formData.append("name", editPartner.name);
-    formData.append("description", editPartner.description || "");
+    if (editPartner.description) {
+      formData.append("description", editPartner.description);
+    }
     if (editPartner.partnerGuildId) {
       formData.append("partnerGuildId", editPartner.partnerGuildId);
     }
-    if (editPartner.notes) {
-      formData.append("notes", editPartner.notes);
+    
+    // Convert notes array to JSON if there are notes
+    if (editPartnerNotes.length > 0) {
+      formData.append("notes", JSON.stringify(editPartnerNotes));
     }
+    
     if (editPartner.tags.length > 0) {
       formData.append("tags", JSON.stringify(editPartner.tags));
     }
+    
     if (editPartner.publicLink) {
       formData.append("publicLink", editPartner.publicLink);
     }
+    
     if (editSelectedFile) {
       formData.append("banner", editSelectedFile);
     }
@@ -178,23 +213,31 @@ export const PartnerList = ({
     }
 
     try {
-      const response = await fetch(`/api/partners/${serverId}/${partnerId}`, {
-        method: "PUT",
-        body: formData,
-      });
+      const response = await fetch(
+        `/api/partners/${serverId}/${editingPartnerId}`,
+        {
+          method: "PATCH",
+          body: formData,
+        }
+      );
 
       if (response.ok) {
         setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "", tags: [], publicLink: "" });
         setEditSelectedFile(null);
         setEditSelectedPosterFile(null);
         setEditingPartnerId(null);
+        setEditPartnerNotes([]);
+        setEditTagInput("");
         router.refresh();
+      } else {
+        const errorData = await response.json();
+        console.error("Error editing partner:", errorData);
       }
     } catch (error) {
-      console.error("Error updating partner:", error);
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error editing partner:", error);
     }
+
+    setIsSubmitting(false);
   };
 
   const handleDeletePartner = async (partnerId: string) => {
@@ -216,16 +259,82 @@ export const PartnerList = ({
     }
   };
 
-  const startEditing = (partner: PartnerWithStats) => {
+  // Initialize partnerNotes from existing notes when editing
+  const startEditing = (partner: GuildPartner & { partnerGuild?: { guildId: string } | null }) => {
     setEditingPartnerId(partner.id);
     setEditPartner({
       name: partner.name,
       description: partner.description || "",
-      partnerGuildId: partner.partnerGuild?.guildId || "",
+      partnerGuildId: partner.partnerGuildId || "",
       notes: partner.notes || "",
       tags: partner.tags || [],
       publicLink: partner.publicLink || "",
     });
+    
+    // Initialize notes
+    if (partner.notes) {
+      try {
+        const parsedNotes = JSON.parse(partner.notes);
+        if (Array.isArray(parsedNotes)) {
+          setEditPartnerNotes(parsedNotes);
+        } else {
+          setEditPartnerNotes([partner.notes]);
+        }
+      } catch (error) {
+        setEditPartnerNotes(partner.notes ? [partner.notes] : []);
+      }
+    } else {
+      setEditPartnerNotes([]);
+    }
+    
+    setEditSelectedFile(null);
+    setEditSelectedPosterFile(null);
+  };
+
+  // Auto-fill public link when partner server is selected
+  const handlePartnerServerChange = async (partnerGuildId: string) => {
+    if (!partnerGuildId) {
+      setNewPartner(prev => ({ ...prev, partnerGuildId: "", publicLink: "" }));
+      return;
+    }
+    
+    setNewPartner(prev => ({ ...prev, partnerGuildId }));
+    
+    // Auto-fill public link if available
+    try {
+      const response = await fetch(`/api/guilds/${partnerGuildId}`);
+      if (response.ok) {
+        const guildData = await response.json();
+        if (guildData && guildData.inviteUrl) {
+          setNewPartner(prev => ({ ...prev, publicLink: guildData.inviteUrl }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching partner guild data:", error);
+    }
+  };
+  
+  // Auto-fill public link when partner server is selected in edit mode
+  const handleEditPartnerServerChange = async (partnerGuildId: string) => {
+    if (!partnerGuildId) {
+      setEditPartner(prev => ({ ...prev, partnerGuildId: "", publicLink: "" }));
+      return;
+    }
+    
+    setEditPartner(prev => ({ ...prev, partnerGuildId }));
+    
+    // Auto-fill public link if available
+    try {
+      const response = await fetch(`/api/guilds/${partnerGuildId}`);
+      if (response.ok) {
+        const guildData = await response.json();
+        if (guildData && guildData.inviteUrl) {
+          setEditPartner(prev => ({ ...prev, publicLink: guildData.inviteUrl }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching partner guild data:", error);
+    }
   };
 
   return (
@@ -240,7 +349,7 @@ export const PartnerList = ({
           className={editingPartnerId === partner.id ? "border-blue-500" : ""}
         >
           {editingPartnerId === partner.id ? (
-            <form onSubmit={(e) => handleEditPartner(e, partner.id)} className="space-y-4">
+            <form onSubmit={(e) => handleEditPartner(e)} className="space-y-4">
               <div>
                 <label htmlFor="edit-name" className="mb-1 block text-sm font-medium">
                   Partner Server Name
@@ -270,19 +379,57 @@ export const PartnerList = ({
                 <Input
                   id="edit-partner-guild-id"
                   value={editPartner.partnerGuildId}
-                  onChange={(e) => setEditPartner({ ...editPartner, partnerGuildId: e.target.value })}
+                  onChange={(e) => handleEditPartnerServerChange(e.target.value)}
                 />
               </div>
               <div>
                 <label htmlFor="edit-notes" className="mb-1 block text-sm font-medium">
                   Notes
                 </label>
-                <Textarea
-                  id="edit-notes"
-                  value={editPartner.notes}
-                  onChange={(e) => setEditPartner({ ...editPartner, notes: e.target.value })}
-                  rows={3}
-                />
+                {editPartnerNotes.map((note, index) => (
+                  <div key={index} className="mb-2 flex items-center space-x-2">
+                    <textarea
+                      value={note}
+                      onChange={(e) => {
+                        const newNotes = [...editPartnerNotes];
+                        newNotes[index] = e.target.value;
+                        setEditPartnerNotes(newNotes);
+                      }}
+                      className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
+                      rows={2}
+                    />
+                    <Button
+                      type="button"
+                      variant="red"
+                      size="icon"
+                      onClick={() => removeEditNote(index)}
+                    >
+                      <Icons.Trash className={iconVariants({ variant: "button" })} />
+                    </Button>
+                  </div>
+                ))}
+                {editPartnerNotes.length < 20 && (
+                  <div className="flex items-center space-x-2">
+                    <textarea
+                      value={editNoteInput}
+                      onChange={(e) => setEditNoteInput(e.target.value)}
+                      className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
+                      rows={2}
+                      placeholder="Add a new note..."
+                    />
+                    <Button
+                      type="button"
+                      variant="primary"
+                      size="icon"
+                      onClick={addEditNote}
+                    >
+                      <Icons.Plus className={iconVariants({ variant: "button" })} />
+                    </Button>
+                  </div>
+                )}
+                {editPartnerNotes.length >= 20 && (
+                  <p className="text-xs text-yellow-500">Maximum of 20 notes reached</p>
+                )}
               </div>
               <div>
                 <label htmlFor="edit-tags" className="mb-1 block text-sm font-medium">
@@ -291,21 +438,57 @@ export const PartnerList = ({
                 <Input
                   id="edit-tags"
                   type="text"
-                  value={editPartner.tags.join(", ")}
-                  onChange={(e) => setEditPartner({ ...editPartner, tags: e.target.value.split(", ") })}
+                  value={editTagInput}
+                  onChange={(e) => setEditTagInput(e.target.value)}
                 />
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="icon"
+                  onClick={() => {
+                    if (editTagInput.trim() !== "") {
+                      setEditPartner({ ...editPartner, tags: [...editPartner.tags, editTagInput] });
+                      setEditTagInput("");
+                    }
+                  }}
+                >
+                  <Icons.Plus className={iconVariants({ variant: "button" })} />
+                </Button>
+                {editPartner.tags.map((tag, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <span className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
+                      {tag}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="red"
+                      size="icon"
+                      onClick={() => {
+                        const newTags = [...editPartner.tags];
+                        newTags.splice(index, 1);
+                        setEditPartner({ ...editPartner, tags: newTags });
+                      }}
+                    >
+                      <Icons.Trash className={iconVariants({ variant: "button" })} />
+                    </Button>
+                  </div>
+                ))}
               </div>
-              <div>
-                <label htmlFor="edit-public-link" className="mb-1 block text-sm font-medium">
-                  Public Link
-                </label>
-                <Input
-                  id="edit-public-link"
-                  type="text"
-                  value={editPartner.publicLink}
-                  onChange={(e) => setEditPartner({ ...editPartner, publicLink: e.target.value })}
-                />
-              </div>
+              {/* Public Link - only shown when there is a partner server */}
+              {editPartner.partnerGuildId && (
+                <div>
+                  <label htmlFor="edit-public-link" className="mb-1 block text-sm font-medium">
+                    Public Link
+                  </label>
+                  <Input
+                    id="edit-public-link"
+                    type="text"
+                    value={editPartner.publicLink}
+                    onChange={(e) => setEditPartner({ ...editPartner, publicLink: e.target.value })}
+                    placeholder="Auto-filled when available"
+                  />
+                </div>
+              )}
               <div>
                 <label htmlFor="edit-banner" className="mb-1 block text-sm font-medium">
                   Banner Image
@@ -375,7 +558,7 @@ export const PartnerList = ({
                 {partner.hasBanner && (
                   <div className="shrink-0 overflow-hidden rounded-md">
                     <Image
-                      src={`/server/${serverId}/${partner.id}/banner.png`}
+                      src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
                       alt={`${partner.name} banner`}
                       width={120}
                       height={60}
@@ -556,19 +739,57 @@ export const PartnerList = ({
               <Input
                 id="partner-partner-guild-id"
                 value={newPartner.partnerGuildId}
-                onChange={(e) => setNewPartner({ ...newPartner, partnerGuildId: e.target.value })}
+                onChange={(e) => handlePartnerServerChange(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="partner-notes" className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium">
                 Notes
               </label>
-              <Textarea
-                id="partner-notes"
-                value={newPartner.notes}
-                onChange={(e) => setNewPartner({ ...newPartner, notes: e.target.value })}
-                rows={3}
-              />
+              {partnerNotes.map((note, index) => (
+                <div key={index} className="mb-2 flex items-center space-x-2">
+                  <textarea
+                    value={note}
+                    onChange={(e) => {
+                      const newNotes = [...partnerNotes];
+                      newNotes[index] = e.target.value;
+                      setPartnerNotes(newNotes);
+                    }}
+                    className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
+                    rows={2}
+                  />
+                  <Button
+                    type="button"
+                    variant="red"
+                    size="icon"
+                    onClick={() => removeNote(index)}
+                  >
+                    <Icons.Trash className={iconVariants({ variant: "button" })} />
+                  </Button>
+                </div>
+              ))}
+              {partnerNotes.length < 20 && (
+                <div className="flex items-center space-x-2">
+                  <textarea
+                    value={noteInput}
+                    onChange={(e) => setNoteInput(e.target.value)}
+                    className="w-full rounded-md border border-neutral-800 bg-neutral-900/50 px-3 py-2 text-sm"
+                    rows={2}
+                    placeholder="Add a new note..."
+                  />
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="icon"
+                    onClick={addNote}
+                  >
+                    <Icons.Plus className={iconVariants({ variant: "button" })} />
+                  </Button>
+                </div>
+              )}
+              {partnerNotes.length >= 20 && (
+                <p className="text-xs text-yellow-500">Maximum of 20 notes reached</p>
+              )}
             </div>
             <div>
               <label htmlFor="partner-tags" className="mb-1 block text-sm font-medium">
@@ -577,70 +798,57 @@ export const PartnerList = ({
               <Input
                 id="partner-tags"
                 type="text"
-                value={newPartner.tags.join(", ")}
-                onChange={(e) => setNewPartner({ ...newPartner, tags: e.target.value.split(", ") })}
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
               />
-            </div>
-            <div>
-              <label htmlFor="partner-public-link" className="mb-1 block text-sm font-medium">
-                Public Link
-              </label>
-              <Input
-                id="partner-public-link"
-                type="text"
-                value={newPartner.publicLink}
-                onChange={(e) => setNewPartner({ ...newPartner, publicLink: e.target.value })}
-              />
-            </div>
-            {showNotesInput && (
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Additional Notes
-                </label>
-                {partnerNotes.map((note, index) => (
-                  <div key={index} className="flex items-center space-x-2">
-                    <Input
-                      type="text"
-                      value={note}
-                      onChange={(e) => {
-                        const newNotes = [...partnerNotes];
-                        newNotes[index] = e.target.value;
-                        setPartnerNotes(newNotes);
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="red"
-                      size="icon"
-                      onClick={() => {
-                        const newNotes = [...partnerNotes];
-                        newNotes.splice(index, 1);
-                        setPartnerNotes(newNotes);
-                      }}
-                    >
-                      <Icons.Trash className={iconVariants({ variant: "button" })} />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="icon"
-                  onClick={() => setPartnerNotes([...partnerNotes, ""])}
-                >
-                  <Icons.Plus className={iconVariants({ variant: "button" })} />
-                </Button>
-              </div>
-            )}
-            <div>
               <Button
                 type="button"
-                variant="secondary"
-                onClick={() => setShowNotesInput(!showNotesInput)}
+                variant="primary"
+                size="icon"
+                onClick={() => {
+                  if (tagInput.trim() !== "") {
+                    setNewPartner({ ...newPartner, tags: [...newPartner.tags, tagInput] });
+                    setTagInput("");
+                  }
+                }}
               >
-                {showNotesInput ? "Hide Additional Notes" : "Show Additional Notes"}
+                <Icons.Plus className={iconVariants({ variant: "button" })} />
               </Button>
+              {newPartner.tags.map((tag, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="inline-flex items-center rounded-md bg-blue-500/20 px-2 py-1 text-xs text-blue-400">
+                    {tag}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="red"
+                    size="icon"
+                    onClick={() => {
+                      const newTags = [...newPartner.tags];
+                      newTags.splice(index, 1);
+                      setNewPartner({ ...newPartner, tags: newTags });
+                    }}
+                  >
+                    <Icons.Trash className={iconVariants({ variant: "button" })} />
+                  </Button>
+                </div>
+              ))}
             </div>
+            {/* Public Link - only shown when there is a partner server */}
+            {newPartner.partnerGuildId && (
+              <div>
+                <label htmlFor="partner-public-link" className="mb-1 block text-sm font-medium">
+                  Public Link
+                </label>
+                <Input
+                  id="partner-public-link"
+                  type="text"
+                  value={newPartner.publicLink}
+                  onChange={(e) => setNewPartner({ ...newPartner, publicLink: e.target.value })}
+                  placeholder="Auto-filled when available"
+                />
+              </div>
+            )}
             <div>
               <label htmlFor="partner-banner" className="mb-1 block text-sm font-medium">
                 Banner Image (Optional)

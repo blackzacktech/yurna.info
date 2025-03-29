@@ -38,9 +38,15 @@ export async function GET(
     return NextResponse.json({ error: "Server not found" }, { status: 404 });
   }
 
+  // For access token handling
+  const accessToken = session.accessToken as string;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Missing access token" }, { status: 401 });
+  }
+
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.accessToken
+    accessToken
   );
   if (
     !serverMember ||
@@ -90,9 +96,15 @@ export async function POST(
     return NextResponse.json({ error: "Server not found" }, { status: 404 });
   }
 
+  // For access token handling
+  const accessToken = session.accessToken as string;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Missing access token" }, { status: 401 });
+  }
+
   const serverMember = await getGuildFromMemberGuilds(
     serverDownload.id,
-    session.accessToken
+    accessToken
   );
   if (
     !serverMember ||

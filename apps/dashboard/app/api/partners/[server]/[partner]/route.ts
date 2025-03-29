@@ -4,6 +4,8 @@ import { getSession } from "lib/session";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getServerSession } from "next-auth";
+import authOptions from "lib/authOptions";
 
 export async function PUT(
   request: NextRequest,
@@ -244,5 +246,51 @@ export async function DELETE(
       { error: "Failed to delete partner" },
       { status: 500 }
     );
+  }
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { server: string; partner: string } }
+) {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get("type") || "banner";
+  
+  try {
+    const partner = await prismaClient.guildPartner.findUnique({
+      where: {
+        id: params.partner,
+      },
+    });
+
+    if (!partner) {
+      return new NextResponse("Partner not found", { status: 404 });
+    }
+
+    let filePath;
+    if (type === "banner" && partner.hasBanner) {
+      filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png");
+    } else if (type === "poster" && partner.hasPosters) {
+      filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png");
+    } else {
+      return new NextResponse("Image not found", { status: 404 });
+    }
+
+    if (!fs.existsSync(filePath)) {
+      return new NextResponse("Image not found", { status: 404 });
+    }
+
+    const imageBuffer = fs.readFileSync(filePath);
+    return new NextResponse(imageBuffer, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      },
+    });
+  } catch (error) {
+    console.error("Error serving partner image:", error);
+    return new NextResponse("Error serving image", { status: 500 });
   }
 }
