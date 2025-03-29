@@ -94,7 +94,7 @@ export const SideNavigation = ({ className, server, ...props }: SideNavigationPr
      </SideNavLink>
      <SideNavLink href={`/dashboard/${server}/partner`}>
       <Icons.HandShake className={iconVariants({ variant: "large" })} />
-      Partner
+      Partner <Badge className="-mt-3">neu</Badge>
      </SideNavLink>
      <SideNavLink href={`/dashboard/${server}/tickets`}>
       <Icons.TicketCheck className={iconVariants({ variant: "large" })} />

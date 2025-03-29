@@ -7,10 +7,24 @@ import { Icons, iconVariants } from "@/components/ui/Icons";
 import { Input, Textarea } from "@/components/ui/Input";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import type { GuildPartner } from "@prisma/client";
+import type { Guild } from "@prisma/client";
 import Image from "next/image";
 
 // Erweiterte Typdefinition für Partner mit Stats
+type GuildPartner = {
+  id: string;
+  guildId: string;
+  name: string;
+  description: string | null;
+  hasBanner: boolean;
+  hasPosters: boolean;
+  partnerGuildId: string | null;
+  partnershipDate: Date;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 type PartnerWithStats = GuildPartner & {
   partnerStats?: {
     hasYurna: boolean;
@@ -40,6 +54,8 @@ export const PartnerList = ({
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedPosterFile, setSelectedPosterFile] = useState<File | null>(null);
+  const [showNotesInput, setShowNotesInput] = useState(false);
+  const [partnerNotes, setPartnerNotes] = useState<string[]>([]);
   const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null);
   const [editPartner, setEditPartner] = useState({
     name: "",
@@ -61,9 +77,17 @@ export const PartnerList = ({
     if (newPartner.partnerGuildId) {
       formData.append("partnerGuildId", newPartner.partnerGuildId);
     }
-    if (newPartner.notes) {
+    
+    // Compile notes into a JSON string if there are any custom notes
+    if (showNotesInput && partnerNotes.length > 0) {
+      const filteredNotes = partnerNotes.filter(note => note.trim() !== "");
+      if (filteredNotes.length > 0) {
+        formData.append("notes", JSON.stringify(filteredNotes));
+      }
+    } else if (newPartner.notes) {
       formData.append("notes", newPartner.notes);
     }
+    
     if (selectedFile) {
       formData.append("banner", selectedFile);
     }
@@ -82,10 +106,16 @@ export const PartnerList = ({
         setSelectedFile(null);
         setSelectedPosterFile(null);
         setIsAdding(false);
+        setShowNotesInput(false);
+        setPartnerNotes([]);
         router.refresh();
+      } else {
+        const errorData = await response.json();
+        alert(`Error adding partner: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error("Error adding partner:", error);
+      alert("Error adding partner. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -244,7 +274,7 @@ export const PartnerList = ({
                     accept="image/*"
                     onChange={(e) => setEditSelectedPosterFile(e.target.files?.[0] || null)}
                   />
-                  {partner.hasPoster && !editSelectedPosterFile && (
+                  {partner.hasPosters && !editSelectedPosterFile && (
                     <span className="text-xs text-neutral-400">Current poster will be kept if no new image is selected</span>
                   )}
                 </div>
@@ -294,7 +324,7 @@ export const PartnerList = ({
                     />
                   </div>
                 )}
-                {partner.hasPoster && (
+                {partner.hasPosters && (
                   <div className="shrink-0 overflow-hidden rounded-md">
                     <Image
                       src={`/server/${serverId}/${partner.id}/posters.png`}
@@ -395,6 +425,55 @@ export const PartnerList = ({
                 onChange={(e) => setNewPartner({ ...newPartner, notes: e.target.value })}
                 rows={3}
               />
+            </div>
+            {showNotesInput && (
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Additional Notes
+                </label>
+                {partnerNotes.map((note, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <Input
+                      type="text"
+                      value={note}
+                      onChange={(e) => {
+                        const newNotes = [...partnerNotes];
+                        newNotes[index] = e.target.value;
+                        setPartnerNotes(newNotes);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="red"
+                      size="icon"
+                      onClick={() => {
+                        const newNotes = [...partnerNotes];
+                        newNotes.splice(index, 1);
+                        setPartnerNotes(newNotes);
+                      }}
+                    >
+                      <Icons.Trash className={iconVariants({ variant: "button" })} />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="icon"
+                  onClick={() => setPartnerNotes([...partnerNotes, ""])}
+                >
+                  <Icons.Plus className={iconVariants({ variant: "button" })} />
+                </Button>
+              </div>
+            )}
+            <div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowNotesInput(!showNotesInput)}
+              >
+                {showNotesInput ? "Hide Additional Notes" : "Show Additional Notes"}
+              </Button>
             </div>
             <div>
               <label htmlFor="partner-banner" className="mb-1 block text-sm font-medium">

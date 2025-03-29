@@ -134,8 +134,9 @@ export async function POST(
     const name = formData.get("name") as string;
     const description = formData.get("description") as string;
     const banner = formData.get("banner") as File | null;
-    const partnerGuildId = formData.get("partnerGuildId") as string || null;
-    const notes = formData.get("notes") as string || "";
+    const posters = formData.get("posters") as File | null;
+    const partnerGuildId = formData.get("partnerGuildId") ? (formData.get("partnerGuildId") as string) : null;
+    const notes = formData.get("notes") ? (formData.get("notes") as string) : "";
 
     if (!name) {
       return NextResponse.json(
@@ -166,6 +167,7 @@ export async function POST(
         name,
         description,
         hasBanner: !!banner,
+        hasPosters: !!posters,
         partnerGuildId,
         notes,
       },
@@ -193,6 +195,30 @@ export async function POST(
       const arrayBuffer = await banner.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       fs.writeFileSync(path.join(partnerDir, "banner.png"), buffer);
+    }
+
+    if (posters) {
+      // Create directories if they don't exist
+      const publicDir = path.join(process.cwd(), "public");
+      const serverDir = path.join(publicDir, "server", serverDownload.id);
+      const partnerDir = path.join(serverDir, partner.id);
+      
+      if (!fs.existsSync(publicDir)) {
+        fs.mkdirSync(publicDir, { recursive: true });
+      }
+      
+      if (!fs.existsSync(serverDir)) {
+        fs.mkdirSync(serverDir, { recursive: true });
+      }
+      
+      if (!fs.existsSync(partnerDir)) {
+        fs.mkdirSync(partnerDir, { recursive: true });
+      }
+
+      // Save the poster
+      const arrayBuffer = await posters.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      fs.writeFileSync(path.join(partnerDir, "posters.png"), buffer);
     }
 
     return NextResponse.json(partner, { status: 201 });
