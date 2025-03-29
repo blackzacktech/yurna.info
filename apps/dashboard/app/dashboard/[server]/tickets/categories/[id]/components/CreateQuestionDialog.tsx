@@ -3,7 +3,7 @@
 import { FC, useState } from 'react';
 import { TicketQuestion } from '@prisma/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/Dialog';
 import {
   Form,
   FormControl,
@@ -13,15 +13,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { PlusCircle, Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/Switch';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/components/ui/use-toast';
+import { PlusCircle, Loader2 } from 'lucide-react';
 
 interface CreateQuestionDialogProps {
   categoryId: string;
