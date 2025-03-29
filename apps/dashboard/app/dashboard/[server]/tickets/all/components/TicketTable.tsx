@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { Table } from '@/components/ui/table';
+import { Table } from '@/components/ui/Table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/Badge';
 import { MoreHorizontal, Eye, Clock, X, CheckCircle2 } from 'lucide-react';
 import {
   DropdownMenu,
