@@ -159,8 +159,11 @@ export function TicketTable({ tickets, serverId }: TicketTableProps) {
   ];
 
   return (
-    <div className="rounded-md border">
-      <Table columns={columns} data={tickets} />
+    <div className="space-y-4">
+      <SimpleTableHeader title="Alle Tickets" />
+      <Table columns={columns} data={tickets} showControls />
     </div>
   );
 }
+
+export default TicketTable;
