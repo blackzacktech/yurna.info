@@ -97,10 +97,25 @@ export const PartnerList = ({
   // Initialize the toast component
   const { toast } = useToast();
 
+  // Timestamp State für Bild-Refresh hinzufügen
+  const [imageTimestamp, setImageTimestamp] = useState<number>(Date.now());
+
+  // Funktion zum Aktualisieren des Timestamps
+  const updateImageTimestamp = () => {
+    setImageTimestamp(Date.now());
+  };
+
+  // Aktualisiere Timestamp nach erfolgreicher Partner-Aktion
+  useEffect(() => {
+    if (!isSubmitting) {
+      updateImageTimestamp();
+    }
+  }, [isSubmitting]);
+
   // Function to copy image URL to clipboard
   const copyImageUrlToClipboard = (partnerId: string, type: "banner" | "poster") => {
     const baseUrl = window.location.origin;
-    const imageUrl = `${baseUrl}/api/partners/${serverId}/${partnerId}/${type}.png`;
+    const imageUrl = `${baseUrl}/api/partners/${serverId}/${partnerId}/${type}.png?timestamp=${imageTimestamp}`;
     
     navigator.clipboard.writeText(imageUrl)
       .then(() => {
@@ -194,13 +209,13 @@ export const PartnerList = ({
       const partner = partners.find(p => p.id === editingPartnerId);
       if (partner) {
         if (partner.hasBanner) {
-          setEditBannerPreviewUrl(`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`);
+          setEditBannerPreviewUrl(`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`);
         } else {
           setEditBannerPreviewUrl(null);
         }
         
         if (partner.hasPosters) {
-          setEditPosterPreviewUrl(`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`);
+          setEditPosterPreviewUrl(`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}&type=poster`);
         } else {
           setEditPosterPreviewUrl(null);
         }
@@ -209,7 +224,7 @@ export const PartnerList = ({
       setEditBannerPreviewUrl(null);
       setEditPosterPreviewUrl(null);
     }
-  }, [editingPartnerId, partners, serverId]);
+  }, [editingPartnerId, partners, serverId, imageTimestamp]);
   
   // Clean up preview URLs when component unmounts
   useEffect(() => {
@@ -315,81 +330,60 @@ export const PartnerList = ({
     }
 
     setIsSubmitting(false);
+    updateImageTimestamp();
   };
   
   const handleEditPartner = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    if (!editingPartnerId) {
-      alert("No partner selected for editing");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!editPartner.name) {
-      alert("Partner name is required");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("name", editPartner.name);
-    if (editPartner.description) {
-      formData.append("description", editPartner.description);
-    }
-    if (editPartner.partnerGuildId) {
-      formData.append("partnerGuildId", editPartner.partnerGuildId);
-    }
-    
-    // Convert notes array to JSON if there are notes
-    if (editPartnerNotes.length > 0) {
-      formData.append("notes", JSON.stringify(editPartnerNotes));
-    }
-    
-    if (editPartner.tags.length > 0) {
-      formData.append("tags", JSON.stringify(editPartner.tags));
-    }
-    
-    if (editPartner.publicLink) {
-      formData.append("publicLink", editPartner.publicLink);
-    }
-    
-    if (editSelectedFile) {
-      formData.append("banner", editSelectedFile);
-    }
-    if (editSelectedPosterFile) {
-      formData.append("posters", editSelectedPosterFile);
-    }
+    if (!editPartner.name) return;
 
     try {
-      const response = await fetch(
-        `/api/partners/${serverId}/${editingPartnerId}`,
-        {
-          method: "PUT",
-          body: formData,
-        }
-      );
+      setIsSubmitting(true);
+      const formData = new FormData();
 
-      if (response.ok) {
-        setEditPartner({ name: "", description: "", partnerGuildId: "", notes: "", tags: [], publicLink: "" });
-        setEditSelectedFile(null);
-        setEditSelectedPosterFile(null);
-        setEditingPartnerId(null);
-        setEditPartnerNotes([]);
-        setEditTagInput("");
-        router.refresh();
-      } else {
-        const errorData = await response.json();
-        console.error("Error editing partner:", errorData);
-        alert(`Error editing partner: ${errorData.message || errorData.error || "Unknown error"}`);
+      formData.append("name", editPartner.name);
+      formData.append("description", editPartner.description || "");
+      formData.append("partnerGuildId", editPartner.partnerGuildId || "");
+      formData.append("tags", JSON.stringify(editPartner.tags));
+      formData.append("notes", JSON.stringify(editPartnerNotes));
+      formData.append("publicLink", editPartner.publicLink || "");
+
+      if (editSelectedFile) {
+        formData.append("banner", editSelectedFile);
       }
-    } catch (error) {
-      console.error("Error editing partner:", error);
-      alert("Error editing partner. Please try again.");
-    }
 
-    setIsSubmitting(false);
+      if (editSelectedPosterFile) {
+        formData.append("posters", editSelectedPosterFile);
+      }
+
+      const res = await fetch(`/api/partners/${serverId}/${editingPartnerId}`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Failed to save partner");
+
+      toast({
+        title: "Partner aktualisiert",
+        description: "Der Partner wurde erfolgreich aktualisiert.",
+        variant: "success",
+      });
+      
+      // Aktualisiere Bilder durch Timestamp-Refresh
+      updateImageTimestamp();
+      
+      setEditingPartnerId(null);
+      router.refresh();
+    } catch (error) {
+      console.error("Error updating partner:", error);
+      toast({
+        title: "Fehler",
+        description: "Partner konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeletePartner = async (partnerId: string) => {
@@ -772,7 +766,7 @@ export const PartnerList = ({
                   {partner.hasBanner && (
                     <div className="relative h-40 w-full overflow-hidden">
                       <Image
-                        src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${new Date().getTime()}`}
+                        src={`/api/partners/${serverId}/${partner.id}/banner.png?timestamp=${imageTimestamp}`}
                         alt={`${partner.name} Banner`}
                         width={640}
                         height={160}
@@ -796,7 +790,7 @@ export const PartnerList = ({
                   {partner.hasPosters && (
                     <div className="relative h-40 w-full overflow-hidden">
                       <Image
-                        src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${new Date().getTime()}&type=poster`}
+                        src={`/api/partners/${serverId}/${partner.id}/poster.png?timestamp=${imageTimestamp}&type=poster`}
                         alt={`${partner.name} Poster`}
                         width={640}
                         height={160}

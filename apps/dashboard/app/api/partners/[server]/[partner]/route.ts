@@ -147,25 +147,39 @@ export async function PUT(
         const serverBannerPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "banner.png");
         if (fs.existsSync(serverBannerPath)) {
           fs.unlinkSync(serverBannerPath);
+          console.log("Deleted old banner from:", serverBannerPath);
         }
         
         const uploadsBannerPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "banner.png");
         if (fs.existsSync(uploadsBannerPath)) {
           fs.unlinkSync(uploadsBannerPath);
+          console.log("Deleted old banner from:", uploadsBannerPath);
         }
       }
       
-      // Save new banner
-      const buffer = Buffer.from(await banner.arrayBuffer());
-      const dir = path.join(
-        process.cwd(),
-        "public",
-        "server",
-        serverDownload.id,
-        partner
-      );
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, "banner.png"), buffer);
+      console.log("Saving new banner for partner:", partner);
+      
+      // Save the banner to both possible locations for maximum compatibility
+      try {
+        // Create both directory structures
+        const serverDir = path.join(process.cwd(), "public", "server", serverDownload.id, partner);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner);
+        
+        fs.mkdirSync(serverDir, { recursive: true });
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        
+        // Get the file buffer
+        const buffer = Buffer.from(await banner.arrayBuffer());
+        
+        // Save to both locations
+        fs.writeFileSync(path.join(serverDir, "banner.png"), buffer);
+        console.log("Banner saved to:", path.join(serverDir, "banner.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "banner.png"), buffer);
+        console.log("Banner saved to:", path.join(uploadsDir, "banner.png"));
+      } catch (error) {
+        console.error("Error saving banner:", error);
+      }
     }
 
     if (posters) {
@@ -175,35 +189,57 @@ export async function PUT(
         const serverPosterPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "posters.png");
         if (fs.existsSync(serverPosterPath)) {
           fs.unlinkSync(serverPosterPath);
+          console.log("Deleted old poster from:", serverPosterPath);
         }
         
         const serverPosterAltPath = path.join(process.cwd(), "public", "server", serverDownload.id, partner, "poster.png");
         if (fs.existsSync(serverPosterAltPath)) {
           fs.unlinkSync(serverPosterAltPath);
+          console.log("Deleted old poster from:", serverPosterAltPath);
         }
         
         const uploadsPosterPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "posters.png");
         if (fs.existsSync(uploadsPosterPath)) {
           fs.unlinkSync(uploadsPosterPath);
+          console.log("Deleted old poster from:", uploadsPosterPath);
         }
         
         const uploadsPosterAltPath = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner, "poster.png");
         if (fs.existsSync(uploadsPosterAltPath)) {
           fs.unlinkSync(uploadsPosterAltPath);
+          console.log("Deleted old poster from:", uploadsPosterAltPath);
         }
       }
       
-      // Save new poster
-      const buffer = Buffer.from(await posters.arrayBuffer());
-      const dir = path.join(
-        process.cwd(),
-        "public",
-        "server",
-        serverDownload.id,
-        partner
-      );
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, "posters.png"), buffer);
+      console.log("Saving new poster for partner:", partner);
+      
+      // Save the poster to both possible locations for maximum compatibility
+      try {
+        // Create both directory structures
+        const serverDir = path.join(process.cwd(), "public", "server", serverDownload.id, partner);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner);
+        
+        fs.mkdirSync(serverDir, { recursive: true });
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        
+        // Get the file buffer
+        const buffer = Buffer.from(await posters.arrayBuffer());
+        
+        // Save to both locations with both naming conventions
+        fs.writeFileSync(path.join(serverDir, "posters.png"), buffer);
+        console.log("Poster saved to:", path.join(serverDir, "posters.png"));
+        
+        fs.writeFileSync(path.join(serverDir, "poster.png"), buffer);
+        console.log("Poster saved to:", path.join(serverDir, "poster.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "posters.png"), buffer);
+        console.log("Poster saved to:", path.join(uploadsDir, "posters.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "poster.png"), buffer);
+        console.log("Poster saved to:", path.join(uploadsDir, "poster.png"));
+      } catch (error) {
+        console.error("Error saving poster:", error);
+      }
     }
 
     return NextResponse.json(updatedPartner);
@@ -361,43 +397,51 @@ export async function GET(
     });
 
     if (!partner) {
+      console.error("Partner not found:", params.partner);
       return new NextResponse("Partner not found", { status: 404 });
     }
 
     // Determine correct directory structure based on existing files
-    let filePath;
+    let filePath = null;
+    const possiblePaths = [];
     
-    // First try the 'uploads/partners' directory structure
+    // All possible file paths to check for banner
     if (type === "banner" && partner.hasBanner) {
-      filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "banner.png");
-      if (!fs.existsSync(filePath)) {
-        // Try alternate 'server' directory structure
-        filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png");
-      }
-    } else if ((type === "poster" || type === "posters") && partner.hasPosters) {
-      // Check both "poster" and "posters" naming conventions
-      filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "poster.png");
-      if (!fs.existsSync(filePath)) {
-        filePath = path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "posters.png");
-        if (!fs.existsSync(filePath)) {
-          // Try alternate 'server' directory structure
-          filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "poster.png");
-          if (!fs.existsSync(filePath)) {
-            filePath = path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png");
-          }
-        }
-      }
+      // Uploads directory paths
+      possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "banner.png"));
+      // Server directory paths
+      possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "banner.png"));
+    } 
+    // All possible file paths to check for poster
+    else if ((type === "poster" || type === "posters") && partner.hasPosters) {
+      // Uploads directory paths (both naming conventions)
+      possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "poster.png"));
+      possiblePaths.push(path.join(process.cwd(), "public", "uploads", "partners", params.server, partner.id, "posters.png"));
+      // Server directory paths (both naming conventions)
+      possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "poster.png"));
+      possiblePaths.push(path.join(process.cwd(), "public", "server", params.server, partner.id, "posters.png"));
     } else {
-      return new NextResponse("Image not found", { status: 404 });
+      return new NextResponse("Image type not valid", { status: 400 });
+    }
+    
+    // Check all possible paths
+    for (const path of possiblePaths) {
+      console.log("Checking path:", path);
+      if (fs.existsSync(path)) {
+        filePath = path;
+        console.log("Found image at:", filePath);
+        break;
+      }
     }
 
-    if (!fs.existsSync(filePath)) {
-      console.error("Image file not found at path:", filePath);
+    if (!filePath) {
+      console.error("Image file not found in any of these paths:", possiblePaths);
       return new NextResponse("Image file not found", { status: 404 });
     }
 
-    console.log("Serving image from path:", filePath);
     const imageBuffer = fs.readFileSync(filePath);
+    console.log("Successfully read image buffer of size:", imageBuffer.length);
+    
     return new NextResponse(imageBuffer, {
       headers: {
         "Content-Type": "image/png",

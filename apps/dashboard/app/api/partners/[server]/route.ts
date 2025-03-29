@@ -192,29 +192,61 @@ export async function POST(
 
     // Save files if provided
     if (banner) {
-      const buffer = Buffer.from(await banner.arrayBuffer());
-      const dir = path.join(
-        process.cwd(),
-        "public",
-        "server",
-        serverDownload.id,
-        partner.id
-      );
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, "banner.png"), buffer);
+      console.log("Saving banner for partner:", partner.id);
+      
+      // Save the banner to both possible locations for maximum compatibility
+      try {
+        // Create both directory structures
+        const serverDir = path.join(process.cwd(), "public", "server", serverDownload.id, partner.id);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner.id);
+        
+        fs.mkdirSync(serverDir, { recursive: true });
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        
+        // Get the file buffer
+        const buffer = Buffer.from(await banner.arrayBuffer());
+        
+        // Save to both locations
+        fs.writeFileSync(path.join(serverDir, "banner.png"), buffer);
+        console.log("Banner saved to:", path.join(serverDir, "banner.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "banner.png"), buffer);
+        console.log("Banner saved to:", path.join(uploadsDir, "banner.png"));
+      } catch (error) {
+        console.error("Error saving banner:", error);
+      }
     }
 
     if (posters) {
-      const buffer = Buffer.from(await posters.arrayBuffer());
-      const dir = path.join(
-        process.cwd(),
-        "public",
-        "server",
-        serverDownload.id,
-        partner.id
-      );
-      fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(path.join(dir, "posters.png"), buffer);
+      console.log("Saving poster for partner:", partner.id);
+      
+      // Save the poster to both possible locations for maximum compatibility
+      try {
+        // Create both directory structures
+        const serverDir = path.join(process.cwd(), "public", "server", serverDownload.id, partner.id);
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "partners", serverDownload.id, partner.id);
+        
+        fs.mkdirSync(serverDir, { recursive: true });
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        
+        // Get the file buffer
+        const buffer = Buffer.from(await posters.arrayBuffer());
+        
+        // Save to both locations with both naming conventions
+        fs.writeFileSync(path.join(serverDir, "posters.png"), buffer);
+        console.log("Poster saved to:", path.join(serverDir, "posters.png"));
+        
+        fs.writeFileSync(path.join(serverDir, "poster.png"), buffer);
+        console.log("Poster saved to:", path.join(serverDir, "poster.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "posters.png"), buffer);
+        console.log("Poster saved to:", path.join(uploadsDir, "posters.png"));
+        
+        fs.writeFileSync(path.join(uploadsDir, "poster.png"), buffer);
+        console.log("Poster saved to:", path.join(uploadsDir, "poster.png"));
+      } catch (error) {
+        console.error("Error saving poster:", error);
+      }
     }
 
     return NextResponse.json(partner);
