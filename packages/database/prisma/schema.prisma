@@ -405,3 +405,22 @@ model GuildLeaveMessage {
 
  @@map(name: "guild_leave_message")
 }
+
+model DirectMessageHistory {
+  id        String   @id @default(cuid())
+  userId    String   @map(name: "user_id")
+  messages  Json     @default("[]")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map(name: "direct_message_history")
+}
+
+model UserConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+}
