@@ -27,7 +27,6 @@ export async function messageCreate(client: Yurnabot, message: Message): Promise
       const now = new Date();
       const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-      // Letzte 10 Nachrichtenverläufe holen
       const conversation = await prismaClient.userConversation.findMany({
         where: {
           userId: message.author.id,
@@ -45,24 +44,33 @@ export async function messageCreate(client: Yurnabot, message: Message): Promise
         { role: "user", content: userInput },
       ];
 
-      const apiUrl = process.env.YURNA_AI;
-      if (!apiUrl) throw new Error("❌ Die Umgebungsvariable YURNA_AI ist nicht gesetzt.");
+      const apiUrl = process.env.YURNA_AI_URL;
+      const apiKey = process.env.YURNA_AI_KEY;
+      const model = process.env.YURNA_AI_MODEL || "gpt-3.5-turbo";
+
+      if (!apiUrl) throw new Error("❌ YURNA_AI ist nicht gesetzt.");
+
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey && { Authorization: `Bearer ${apiKey}` }),
+        },
         body: JSON.stringify({
-          model: "yurna:latest",
+          model,
           messages,
-          stream: false,
         }),
       });
 
-      const data = await response.json() as { message?: { content?: string } };
-      const aiReply = data.message?.content?.trim() || "❌ Es gab ein Problem mit der Antwort.";
+      const data = await response.json();
+
+      const aiReply =
+        data?.choices?.[0]?.message?.content?.trim() ||
+        data?.message?.content?.trim() ||
+        "❌ Es gab ein Problem mit der Antwort.";
 
       await message.reply(aiReply);
 
-      // Verlauf speichern
       await prismaClient.userConversation.createMany({
         data: [
           {
@@ -79,7 +87,7 @@ export async function messageCreate(client: Yurnabot, message: Message): Promise
       });
 
     } catch (err) {
-      console.error("❌ Ollama-Fehler:", err);
+      console.error("❌ KI-Fehler:", err);
       await message.reply("❌ Die KI ist aktuell nicht verfügbar.");
     }
 
