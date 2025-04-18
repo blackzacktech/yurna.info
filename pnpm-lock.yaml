@@ -127,8 +127,8 @@ importers:
         specifier: 0.33.5
         version: 0.33.5
       validator:
-        specifier: 13.12.0
-        version: 13.12.0
+        specifier: 13.15.0
+        version: 13.15.0
     devDependencies:
       '@types/figlet':
         specifier: 1.7.0
@@ -143,8 +143,8 @@ importers:
         specifier: 1.5.5
         version: 1.5.5
       '@types/validator':
-        specifier: 13.12.2
-        version: 13.12.2
+        specifier: 13.15.0
+        version: 13.15.0
       node-addon-api:
         specifier: 8.3.1
         version: 8.3.1
@@ -287,8 +287,8 @@ importers:
         specifier: 1.2.0
         version: 1.2.0
       validator:
-        specifier: 13.12.0
-        version: 13.12.0
+        specifier: 13.15.0
+        version: 13.15.0
     devDependencies:
       '@next/bundle-analyzer':
         specifier: 15.2.2
@@ -3009,8 +3009,8 @@ packages:
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
 
-  '@types/validator@13.12.2':
-    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
+  '@types/validator@13.15.0':
+    resolution: {integrity: sha512-nh7nrWhLr6CBq9ldtw0wx+z9wKnnv/uTVLA9g/3/TcOYxbpOSZE+MhKPmWqU+K0NvThjhv12uD8MuqijB0WzEA==}
 
   '@types/webxr@0.5.21':
     resolution: {integrity: sha512-geZIAtLzjGmgY2JUi6VxXdCrTb99A7yP49lxLr2Nm/uIK0PkkxcEi4OGhoGDO4pxCf3JwGz2GiJL2Ej4K2bKaA==}
@@ -7385,8 +7385,8 @@ packages:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
 
-  validator@13.12.0:
-    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
+  validator@13.15.0:
+    resolution: {integrity: sha512-36B2ryl4+oL5QxZ3AzD0t5SsMNGvTtQHpjgFO5tbNxfXbMFkY822ktCDe1MnlqV3301QQI9SLHDNJokDI+Z9pA==}
     engines: {node: '>= 0.10'}
 
   vary@1.1.2:
@@ -10343,7 +10343,7 @@ snapshots:
 
   '@types/unist@3.0.3': {}
 
-  '@types/validator@13.12.2': {}
+  '@types/validator@13.15.0': {}
 
   '@types/webxr@0.5.21': {}
 
@@ -15670,7 +15670,7 @@ snapshots:
 
   uuid@8.3.2: {}
 
-  validator@13.12.0: {}
+  validator@13.15.0: {}
 
   vary@1.1.2: {}
 
