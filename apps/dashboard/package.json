@@ -59,7 +59,7 @@
     "sharp": "0.33.5",
     "sonner": "2.0.1",
     "tw-animate-css": "1.2.0",
-    "validator": "13.12.0"
+    "validator": "13.15.15"
   },
   "devDependencies": {
     "@yurna/typescript-config": "workspace:*",
