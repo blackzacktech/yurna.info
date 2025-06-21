@@ -14,7 +14,7 @@
     "docker:build": "cd ../../ && docker build --tag yurna/bot:latest --file apps/bot/Dockerfile ."
   },
   "dependencies": {
-    "@discordjs/rest": "2.4.3",
+    "@discordjs/rest": "2.5.1",
     "@iamtraction/google-translate": "2.0.1",
     "@napi-rs/canvas": "0.1.68",
     "@observablehq/plot": "0.6.17",
