@@ -20,7 +20,7 @@
  "dependencies": {
   "@yurna/typescript-config": "workspace:*",
   "discord-api-types": "0.37.119",
-  "dotenv": "16.4.7"
+  "dotenv": "16.6.1"
  },
  "engines": {
   "node": ">=20"
