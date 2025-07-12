@@ -74,5 +74,5 @@
     "url": "https://github.com/blackzacktech/yurna.info/issues"
   },
   "homepage": "https://github.com/blackzacktech/yurna.info#readme",
-  "packageManager": "pnpm@10.6.3"
+  "packageManager": "pnpm@10.13.1"
 }
