@@ -18,7 +18,7 @@
     "@yurna/config": "workspace:*",
     "@yurna/database": "workspace:*",
     "@yurna/util": "workspace:*",
-    "@headlessui/react": "2.2.0",
+    "@headlessui/react": "2.2.6",
     "@headlessui/tailwindcss": "0.2.2",
     "@mdx-js/loader": "3.1.0",
     "@mdx-js/react": "3.1.0",
