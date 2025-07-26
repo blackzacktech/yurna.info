@@ -218,8 +218,8 @@ importers:
         specifier: 0.6.3
         version: 0.6.3
       discord-api-types:
-        specifier: 0.37.119
-        version: 0.37.119
+        specifier: 0.38.17
+        version: 0.38.17
       discord-giveaways:
         specifier: 6.0.1
         version: 6.0.1(discord.js@14.18.0)
@@ -336,8 +336,8 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       discord-api-types:
-        specifier: 0.37.119
-        version: 0.37.119
+        specifier: 0.38.17
+        version: 0.38.17
       dotenv:
         specifier: 16.4.7
         version: 16.4.7
@@ -415,8 +415,8 @@ importers:
         specifier: 5.4.1
         version: 5.4.1
       discord-api-types:
-        specifier: 0.37.119
-        version: 0.37.119
+        specifier: 0.38.17
+        version: 0.38.17
       discord.js:
         specifier: 14.18.0
         version: 14.18.0
@@ -3973,6 +3973,9 @@ packages:
   discord-api-types@0.37.119:
     resolution: {integrity: sha512-WasbGFXEB+VQWXlo6IpW3oUv73Yuau1Ig4AZF/m13tXcTKnMpc/mHjpztIlz4+BM9FG9BHQkEXiPto3bKduQUg==}
 
+  discord-api-types@0.38.17:
+    resolution: {integrity: sha512-/fCx5jdUoR2hBFcj77Qx7Tmx1Ub8V/QpyS6uorjFvxRLcJJ348QxMFml9QW/eXh3i46eO4Ve8qGVepStpInEPg==}
+
   discord-giveaways@6.0.1:
     resolution: {integrity: sha512-hs6Vtb62VdlV7NfB93Phaxc8FW0cH4N1Nkb0bXVZ2npgn73yGOFVmdp8bBP5gsC2ady9OAXXI8Gb66t1IddkFw==}
     engines: {node: '>=16.9.0'}
@@ -5764,6 +5767,7 @@ packages:
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    deprecated: Use your platform's native DOMException instead
 
   node-fetch@2.7.0:
     resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
@@ -11412,6 +11416,8 @@ snapshots:
   dijkstrajs@1.0.3: {}
 
   discord-api-types@0.37.119: {}
+
+  discord-api-types@0.38.17: {}
 
   discord-giveaways@6.0.1(discord.js@14.18.0):
     dependencies:

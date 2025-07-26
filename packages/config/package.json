@@ -19,7 +19,7 @@
  },
  "dependencies": {
   "@yurna/typescript-config": "workspace:*",
-  "discord-api-types": "0.37.119",
+  "discord-api-types": "0.38.17",
   "dotenv": "16.4.7"
  },
  "engines": {
