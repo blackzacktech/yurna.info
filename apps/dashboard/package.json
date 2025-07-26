@@ -64,7 +64,7 @@
   "devDependencies": {
     "@yurna/typescript-config": "workspace:*",
     "@next/bundle-analyzer": "15.2.2",
-    "@prisma/nextjs-monorepo-workaround-plugin": "6.5.0",
+    "@prisma/nextjs-monorepo-workaround-plugin": "6.12.0",
     "@tailwindcss/postcss": "4.0.14",
     "@tailwindcss/typography": "0.5.16",
     "@types/mdx": "2.0.13",
